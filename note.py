@@ -21,6 +21,14 @@ class NoteBook:
         input_text = input("Введите текст записи: ")
         notebook.add_note(input_text)
 
+    def change_note(self, note_index, new_text):
+        if 0 <= note_index < len(self.notes):
+            tags = self.extract_tags(new_text)
+            self.notes[note_index] = {"text": new_text, "tags": tags}
+            print(f"Запись с индексом {note_index} изменена в блокноте.")
+        else:
+            print("Указанный индекс записи не существует.")
+
 
 # Пример использования
 if __name__ == "__main__":
