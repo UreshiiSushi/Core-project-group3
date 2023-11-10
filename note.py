@@ -29,6 +29,13 @@ class NoteBook:
         else:
             print("Указанный индекс записи не существует.")
 
+    def delete_note(self, note_index):
+        if 0 <= note_index < len(self.notes):
+            del self.notes[note_index]
+            print(f"Запись с индексом {note_index} удалена из блокнота.")
+        else:
+            print("Указанный индекс записи не существует.")
+
 
 # Пример использования
 if __name__ == "__main__":
