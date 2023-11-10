@@ -36,6 +36,19 @@ class NoteBook:
         else:
             print("Указанный индекс записи не существует.")
 
+    def find_notes(self, search_text):
+        matching_notes = []
+        for index, note in enumerate(self.notes):
+            if search_text.lower() in note["text"].lower():
+                matching_notes.append((index, note))
+
+        if matching_notes:
+            print("Найденные записи:")
+            for index, note in matching_notes:
+                print(f"Индекс: {index}, Текст: {note['text']}, Теги: {note['tags']}")
+        else:
+            print("Нет записей, соответствующих поисковому запросу.")
+
 
 # Пример использования
 if __name__ == "__main__":
