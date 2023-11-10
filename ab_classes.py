@@ -171,11 +171,22 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data.pop(name)
 
-    def iterator(self, quantity: int = 1):
+    # def iterator(self, quantity: int = 1):
+    #     values = list(map(str, islice(self.data.values(), None)))
+    #     while self.counter < len(values):
+    #         yield values[self.counter:self.counter+quantity]
+    #         self.counter += quantity
+
+    def iterator(self, quantity=None):
+        self.counter = 0
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
-            yield values[self.counter:self.counter+quantity]
-            self.counter += quantity
+            if quantity:
+                yield values[self.counter:self.counter+quantity]
+                self.counter += quantity
+            else:
+                yield values  # [self.counter:self.counter+quantity]
+                break
 
 
 if __name__ == "__main__":

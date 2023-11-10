@@ -83,12 +83,18 @@ def find(search: str) -> str or None:
         return f'Nothing was found for your request.'
 
 
-def show_all():
-    # global phone_book
-    for p in phone_book.iterator():
-        print(p)
-        input(">>>Press Enter for next record")
-        # print(p)
+def show_all(*args):
+    # for p in phone_book.iterator():
+    #     print(p)
+    #     input(">>>Press Enter for next record")
+    try:
+        if args[0]:
+            for rec in phone_book.iterator(int(args[0])):
+                print("\n".join([str(r) for r in rec]))
+                input("Press Enter for next records")
+    except:
+        for rec in phone_book.iterator():
+            print("\n".join([str(r) for r in rec]))
 
 
 def save_book() -> str:
@@ -129,8 +135,8 @@ def help(*args):
     seek 'name' 'phone' - find phone for name in the dictionary
     phone 'name' - show phone number for this name
     remove_phone 'name' 'phone' - remove phone for this name
-    <show all>  -  show all records in the dictionary
-    show_all 'N' - show records by N numbers
+    <show_all>  -  show all records in the dictionary
+    <show_all> 'N' - show records by N records on page
     <exit> or <close> or <good_bye> - exit from bot'''
     return message
 
