@@ -219,8 +219,8 @@ MAIN_MENU = {
     greeting: ("hello", "start"),
     menu: "menu",
     sort_main: ("sort", "1"),
-    addressbook_main: ("address book", "2"),
-    notes_main: ("notes", "3"),
+    # addressbook_main: ("address book", "2"),
+    # notes_main: ("notes", "3"),
     stop_command: ("stop", "exit")
 }
 # rebase to ab_classes.py
