@@ -9,7 +9,7 @@ class DateError(Exception):
     ...
 
 
-class Field():
+class Field:
     def __init__(self, value):
         self.__value = None
         self.value = value
@@ -28,6 +28,28 @@ class Field():
 
 class Name(Field):
     ...
+
+
+class Email(Field):
+    def __init__(self, email: str):
+        self.__email = None
+        self.email = email
+
+    @property
+    def email(self):
+        return self.__email
+
+    @email.setter
+    def email(self, email):
+        if re.match(r"[a-zA-Z][a-zA-Z0-9-_.]+\@[a-zA-Z]+\.[a-zA-Z][a-zA-Z]+", email):
+            self.__email = email
+        else:
+            raise ValueError(
+                "Wrong email format. Use pattern <name@domain.com> for email"
+            )
+
+    def __str__(self):
+        return f"{self.__email}"
 
 
 class Birthday(Field):
@@ -85,7 +107,7 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone: str = None, birthday_date: Birthday = None):
+    def __init__(self, name, phone: str = None, birthday_date: str = None, email=None):
         self.name = Name(name)
         self.phones: list(Phone) = []
         self.birthday = None
@@ -93,6 +115,7 @@ class Record:
             self.phones.append(Phone(phone))
         if birthday_date:
             self.birthday = birthday_date  # Birthday(birthday_date)
+        self.email = email
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -141,11 +164,9 @@ class Record:
             # return f"No birthday set"
 
     def __str__(self):
-        phones = '; '.join(p.phone for p in self.phones)
+        phones = "; ".join(p.phone for p in self.phones)
         return "Contact name: {}, birthday: {}, phones: {}".format(
-            self.name,
-            self.birthday,
-            phones
+            self.name, self.birthday, phones
         )
 
 
@@ -170,6 +191,7 @@ class AddressBook(UserDict):
     def delete(self, name: str):
         if name in self.data.keys():
             return self.data.pop(name)
+
 
     # def iterator(self, quantity: int = 1):
     #     values = list(map(str, islice(self.data.values(), None)))
@@ -236,3 +258,8 @@ if __name__ == "__main__":
 
     # Видалення запису Jane
     book.delete("Jane")
+
+    # # Тест емейлу
+    # letter_to = Email("asdf@domain.com")
+    # print(letter_to)
+
