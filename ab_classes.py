@@ -5,7 +5,7 @@ from collections import UserDict
 from datetime import date, timedelta
 
 
-class Field():
+class Field:
     def __init__(self, value):
         self.__value = None
         self.value = value
@@ -24,6 +24,28 @@ class Field():
 
 class Name(Field):
     ...
+
+
+class Email(Field):
+    def __init__(self, email: str):
+        self.__email = None
+        self.email = email
+
+    @property
+    def email(self):
+        return self.__email
+
+    @email.setter
+    def email(self, email):
+        if re.match(r"[a-zA-Z][a-zA-Z0-9-_.]+\@[a-zA-Z]+\.[a-zA-Z][a-zA-Z]+", email):
+            self.__email = email
+        else:
+            raise ValueError(
+                "Wrong email format. Use pattern <name@domain.com> for email"
+            )
+
+    def __str__(self):
+        return f"{self.__email}"
 
 
 class Birthday(Field):
@@ -53,7 +75,7 @@ class Phone(Field):
     @property
     def phone(self):
         return self.__phone
-    
+
     @phone.setter
     def phone(self, phone: str):
         if re.match(r"[0-9]{10}", phone):
@@ -63,7 +85,7 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone: str = None, birthday_date: str = None):
+    def __init__(self, name, phone: str = None, birthday_date: str = None, email=None):
         self.name = Name(name)
         self.phones: list(Phone) = []
         self.birthday = None
@@ -71,6 +93,7 @@ class Record:
             self.phones.append(Phone(phone))
         if birthday_date:
             self.birthday = Birthday(birthday_date)
+        self.email = email
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -112,17 +135,15 @@ class Record:
             if future_bd.month > now_date.month:
                 return future_bd - now_date
             else:
-                future_bd = future_bd.replace(year=future_bd.year+1)
+                future_bd = future_bd.replace(year=future_bd.year + 1)
                 return future_bd - now_date
         else:
             return f"No birthday set"
 
     def __str__(self):
-        phones = '; '.join(p.phone for p in self.phones)
+        phones = "; ".join(p.phone for p in self.phones)
         return "Contact name: {}, birthday: {}, phones: {}".format(
-            self.name,
-            self.birthday,
-            phones
+            self.name, self.birthday, phones
         )
 
 
@@ -148,10 +169,10 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data.pop(name)
 
-    def iterator(self, quantity: int=1):
+    def iterator(self, quantity: int = 1):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
-            yield values[self.counter:self.counter+quantity]
+            yield values[self.counter : self.counter + quantity]
             self.counter += quantity
 
 
@@ -202,3 +223,7 @@ if __name__ == "__main__":
 
     # Видалення запису Jane
     book.delete("Jane")
+
+    # # Тест емейлу
+    # letter_to = Email("asdf@domain.com")
+    # print(letter_to)
