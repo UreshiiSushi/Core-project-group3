@@ -26,6 +26,12 @@ class Name(Field):
     ...
 
 
+class Adress(Field):
+    def __init__(self, adres: str):
+        self.__adress = None
+        self.adress = adres
+
+
 class Birthday(Field):
     def __init__(self, bd: str):
         self.__birthday = None
@@ -53,7 +59,7 @@ class Phone(Field):
     @property
     def phone(self):
         return self.__phone
-    
+
     @phone.setter
     def phone(self, phone: str):
         if re.match(r"[0-9]{10}", phone):
@@ -117,6 +123,12 @@ class Record:
         else:
             return f"No birthday set"
 
+    def add_adress(self, adres: str):
+        pass
+
+    def remove_adress(self, adres: str):
+        pass
+
     def __str__(self):
         phones = '; '.join(p.phone for p in self.phones)
         return "Contact name: {}, birthday: {}, phones: {}".format(
@@ -148,7 +160,7 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data.pop(name)
 
-    def iterator(self, quantity: int=1):
+    def iterator(self, quantity: int = 1):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
             yield values[self.counter:self.counter+quantity]
