@@ -2,7 +2,11 @@
 import re
 from itertools import islice
 from collections import UserDict
-from datetime import date, timedelta
+from datetime import date, datetime
+
+
+class DateError(Exception):
+    ...
 
 
 class Field():
@@ -27,22 +31,40 @@ class Name(Field):
 
 
 class Birthday(Field):
-    def __init__(self, bd: str):
+    # def __init__(self, bd: str):
+    #     self.__birthday = None
+    #     self.birthday = bd
+
+    # @property
+    # def birthday(self):
+    #     return self.__birthday
+
+    # @birthday.setter
+    # def birthday(self, bd):
+    #     if re.match(r"[0-9]{4}\-[0-9]{2}\-[0-9]{2}", bd):
+    #         bd_date = list(map(int, bd.split("-")))
+    #         birthday = date(*bd_date)
+    #         # self.__birthday = birthday
+    #         self.birthday = birthday
+    #     else:
+    #         raise ValueError("Wrong date format. Use YYYY-MM-DD")
+    def __init__(self, birthday) -> None:
         self.__birthday = None
-        self.birthday = bd
+        self.birthday = birthday
 
     @property
     def birthday(self):
         return self.__birthday
 
     @birthday.setter
-    def birthday(self, bd):
-        if re.match(r"[0-9]{4}\-[0-9]{2}\-[0-9]{2}", bd):
-            bd_date = list(map(int, bd.split("-")))
-            birthday = date(*bd_date)
-            self.__birthday = birthday
+    def birthday(self, birthday):
+        if isinstance(birthday, datetime):
+            self.birthday = birthday
         else:
-            raise ValueError("Wrong date format. Use YYYY-MM-DD")
+            raise DateError()
+
+    def __str__(self):
+        return f"Days to birthday: {self.days_to_birthday}"
 
 
 class Phone(Field):
@@ -53,7 +75,7 @@ class Phone(Field):
     @property
     def phone(self):
         return self.__phone
-    
+
     @phone.setter
     def phone(self, phone: str):
         if re.match(r"[0-9]{10}", phone):
@@ -63,21 +85,21 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone: str = None, birthday_date: str = None):
+    def __init__(self, name, phone: str = None, birthday_date: Birthday = None):
         self.name = Name(name)
         self.phones: list(Phone) = []
         self.birthday = None
         if phone:
             self.phones.append(Phone(phone))
         if birthday_date:
-            self.birthday = Birthday(birthday_date)
+            self.birthday = birthday_date  # Birthday(birthday_date)
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
         return f"Added phone {phone} to contact {self.name}"
 
-    def add_birthday(self, bd_date: str):
-        self.birthday = Birthday(bd_date)
+    def add_birthday(self, bd_date):  # str):
+        self.birthday = bd_date  # Birthday(bd_date)
 
     def find_phone(self, phone: str):
         result = None
@@ -104,18 +126,19 @@ class Record:
         if not edit_check:
             raise ValueError
 
-    def days_to_birthday(self) -> timedelta or str:
+    def days_to_birthday(self) -> int:  # timedelta or str:
         if self.birthday:
             now_date = date.today()
-            future_bd = self.birthday.birthday
+            future_bd = self.birthday
             future_bd = future_bd.replace(year=now_date.year)
-            if future_bd.month > now_date.month:
-                return future_bd - now_date
+            if future_bd > now_date:
+                return (future_bd - now_date).days
             else:
                 future_bd = future_bd.replace(year=future_bd.year+1)
-                return future_bd - now_date
+                return (future_bd - now_date).days
         else:
-            return f"No birthday set"
+            raise DateError()
+            # return f"No birthday set"
 
     def __str__(self):
         phones = '; '.join(p.phone for p in self.phones)
@@ -148,11 +171,22 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data.pop(name)
 
-    def iterator(self, quantity: int=1):
+    # def iterator(self, quantity: int = 1):
+    #     values = list(map(str, islice(self.data.values(), None)))
+    #     while self.counter < len(values):
+    #         yield values[self.counter:self.counter+quantity]
+    #         self.counter += quantity
+
+    def iterator(self, quantity=None):
+        self.counter = 0
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
-            yield values[self.counter:self.counter+quantity]
-            self.counter += quantity
+            if quantity:
+                yield values[self.counter:self.counter+quantity]
+                self.counter += quantity
+            else:
+                yield values  # [self.counter:self.counter+quantity]
+                break
 
 
 if __name__ == "__main__":
