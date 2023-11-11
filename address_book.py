@@ -1,10 +1,13 @@
 # from _collections_abc import Iterator
-import re
-import pickle
-from pathlib import Path
-from itertools import islice
 from collections import UserDict
 from datetime import date, datetime
+from itertools import islice
+from pathlib import Path
+import pickle
+import re
+
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit import prompt
 
 save_file = Path("phone_book.bin")
 
@@ -27,6 +30,7 @@ help_message = """Use next commands:
 
 greeting_message = """Welcome to Address Book.
 Type command or 'help' for more information."""
+
 
 class DateError(Exception):
     ...
@@ -76,23 +80,6 @@ class Email(Field):
 
 
 class Birthday(Field):
-    # def __init__(self, bd: str):
-    #     self.__birthday = None
-    #     self.birthday = bd
-
-    # @property
-    # def birthday(self):
-    #     return self.__birthday
-
-    # @birthday.setter
-    # def birthday(self, bd):
-    #     if re.match(r"[0-9]{4}\-[0-9]{2}\-[0-9]{2}", bd):
-    #         bd_date = list(map(int, bd.split("-")))
-    #         birthday = date(*bd_date)
-    #         # self.__birthday = birthday
-    #         self.birthday = birthday
-    #     else:
-    #         raise ValueError("Wrong date format. Use YYYY-MM-DD")
     def __init__(self, birthday) -> None:
         self.__birthday = None
         self.birthday = birthday
@@ -137,15 +124,15 @@ class Record:
         if phone:
             self.phones.append(Phone(phone))
         if birthday_date:
-            self.birthday = birthday_date  # Birthday(birthday_date)
+            self.birthday = birthday_date
         self.email = email
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
         return f"Added phone {phone} to contact {self.name}"
 
-    def add_birthday(self, bd_date):  # str):
-        self.birthday = bd_date  # Birthday(bd_date)
+    def add_birthday(self, bd_date):
+        self.birthday = bd_date
 
     def find_phone(self, phone: str):
         result = None
@@ -172,7 +159,7 @@ class Record:
         if not edit_check:
             raise ValueError
 
-    def days_to_birthday(self) -> int:  # timedelta or str:
+    def days_to_birthday(self) -> int:
         if self.birthday:
             now_date = date.today()
             future_bd = self.birthday
@@ -184,7 +171,6 @@ class Record:
                 return (future_bd - now_date).days
         else:
             raise DateError()
-            # return f"No birthday set"
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
@@ -215,7 +201,6 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data.pop(name)
 
-
     # def iterator(self, quantity: int = 1):
     #     values = list(map(str, islice(self.data.values(), None)))
     #     while self.counter < len(values):
@@ -230,8 +215,9 @@ class AddressBook(UserDict):
                 yield values[self.counter:self.counter+quantity]
                 self.counter += quantity
             else:
-                yield values  # [self.counter:self.counter+quantity]
+                yield values
                 break
+
 
 def input_error(func):
     def inner(*args):
@@ -247,8 +233,10 @@ def input_error(func):
             return "Birthday date error or no birthday data"
     return inner
 
+
 def greeting():
     return greeting_message
+
 
 def help():
     return help_message
@@ -292,8 +280,11 @@ def birthday_in(*args):
         except DateError:
             continue
     return f"Our birthday people in {num_days} days"
+
+
 # save_file = Path("phone_book.bin")
-# phone_book = AddressBook()
+phone_book = AddressBook()
+
 
 @input_error
 def add_record(name: str, phone: str):
@@ -329,8 +320,8 @@ def find(search: str) -> str or None:
             if v.find_phone(search):
                 rec.append(phone_book[k])
     else:
-        for k,v in phone_book.items():
-            if search in k: 
+        for k, v in phone_book.items():
+            if search in k:
                 rec = phone_book[k]
     if rec:
         result = "\n".join(list(map(str, rec)))
@@ -421,9 +412,6 @@ def find(search: str) -> str or None:
 
 
 def show_all(*args):
-    # for p in phone_book.iterator():
-    #     print(p)
-    #     input(">>>Press Enter for next record")
     try:
         if args[0]:
             for rec in phone_book.iterator(int(args[0])):
@@ -449,11 +437,17 @@ def load_book() -> str:
         phone_book.data[k] = v
     return f"Phonebook loaded"
 
-def stop_command():
-    ...
+
+def stop_command(*args) -> str:
+    return f"{save_book()}. Good bye!"
+
+
+def unknown(*args):
+    return "Unknown command. Try again."
+
 
 COMMANDS = {greeting: "hello",
-            add_birhday: "add_b",
+            add_birhday: "add_birthday",
             add_record: "add",
             add_phone: "add_phone",
             birthday_in: "birthday",
@@ -464,13 +458,43 @@ COMMANDS = {greeting: "hello",
             show_all: "show_all",
             save_book: "save",
             load_book: "load",
-            stop_command: ("good_bye", "close", "exit")
+            stop_command: "good_bye",
+            stop_command: "close",
+            stop_command: "exit"
             }
 
-#TODO: implement addressbook_main()
+
+def parcer(text: str):
+    for func, kw in COMMANDS.items():
+        command = text.rstrip().split()
+        if text.lower().startswith(kw) and kw == command[0].lower():
+            return func, text[len(kw):].strip().split()
+    return unknown, []
+
 
 def addressbook_main():
-    ...
+    try:
+        if all([save_file.exists(), save_file.stat().st_size > 0]):
+            print(load_book())
+    except:
+        ...
+    while True:
+        menu_completer = WordCompleter(
+            ['add', 'add_birthday', 'add_phone', 'birthday', 'change', 'days_to_birthday',
+             'find', 'hello', 'help', 'show_all',
+             'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
+
+        user_input = prompt("Enter user name and phone number or 'help' for help: ",
+                            completer=menu_completer)
+        print('You said: %s' % user_input)
+
+        # user_input = input(">>>")
+        func, data = parcer(user_input)
+        result = func(*data)
+        print(result)
+        if result == "Phonebook saved. Good bye!":
+            break
+
 
 if __name__ == "__main__":
     # Створення нової адресної книги
@@ -523,4 +547,3 @@ if __name__ == "__main__":
     # # Тест емейлу
     # letter_to = Email("asdf@domain.com")
     # print(letter_to)
-

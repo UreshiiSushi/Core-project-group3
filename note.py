@@ -1,6 +1,7 @@
 from collections import UserList
 
-#TODO: add help string
+# TODO: add help string
+
 
 class NoteBook(UserList):
     def add_note(self, text):
@@ -45,14 +46,17 @@ class NoteBook(UserList):
         if matching_notes:
             print("Найденные записи:")
             for index, note in matching_notes:
-                print(f"Индекс: {index}, Текст: {note['text']}, Теги: {note['tags']}")
+                print(
+                    f"Индекс: {index}, Текст: {note['text']}, Теги: {note['tags']}")
         else:
             print("Нет записей, соответствующих поисковому запросу.")
 
-#TODO: implement note_main()
+# TODO: implement note_main()
+
 
 def note_main():
-    ...
+
+    input('This is note. Please Enter to exit')
 
 
 # Пример использования
