@@ -51,6 +51,9 @@ class NoteBook(UserList):
 
 #TODO: implement note_main()
 
+def note_main():
+    ...
+
 
 # Пример использования
 if __name__ == "__main__":
