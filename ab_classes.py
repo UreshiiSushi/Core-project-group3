@@ -4,6 +4,7 @@ from itertools import islice
 from collections import UserDict
 from datetime import date, datetime
 
+#TODO: add help string
 
 class DateError(Exception):
     ...
@@ -210,6 +211,7 @@ class AddressBook(UserDict):
                 yield values  # [self.counter:self.counter+quantity]
                 break
 
+#TODO: implement addressbook_main()
 
 if __name__ == "__main__":
     # Створення нової адресної книги
