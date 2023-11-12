@@ -1,8 +1,8 @@
-import sys
-from pathlib import Path
+# import sys
 import os
-import shutil
+from pathlib import Path
 import re
+import shutil
 from zipfile import ZipFile
 
 CATEGORIES = {"audio": [".mp3", ".wav", ".flac", ".wma"],
@@ -100,9 +100,10 @@ def delete_empty_folders(path: Path) -> None:
             shutil.rmtree(i)
 
 
-def main() -> str:
+def sort_main() -> str:
+    folder = input("Enter path to folder you want to sort: ")
     try:
-        path = Path(sys.argv[1])
+        path = Path(folder)
     except IndexError:
         return "No path entered"
 
@@ -113,8 +114,8 @@ def main() -> str:
     delete_empty_folders(path)
     write_in_file(file_list, ext_list, path)
 
-    return "All Ok"
+    return "Folder sorted"
 
 
 if __name__ == "__main__":
-    print(main())
+    print(sort_main())
