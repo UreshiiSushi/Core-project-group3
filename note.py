@@ -3,7 +3,15 @@ import pickle
 
 # TODO: add help string
 
-
+menu = """
+        Menu:
+        1. Add Note
+        2. Search note
+        3. Edit note
+        4. Delete Note
+        5. Sort Notes by tag
+        6. Exit
+        """
 
 class Notes:
     def __init__(self, title, description, tag):
@@ -11,9 +19,9 @@ class Notes:
         self.description = description
         self.tag = tag
 
-class Notebook(UserList):
-    def __init__(self):
-        self.notes = []
+# class Notebook(UserList):
+#     def __init__(self):
+#         self.notes = []
 
 
 class NoteBook(UserList):
@@ -67,27 +75,27 @@ class NoteBook(UserList):
             else:
                 print("Некорректный ввод. Пожалуйста, выберите действие из меню.")
 
-    def display_menu(self):
-        print("\n===== Меню блокнота =====")
-        print("1. Добавить запись")
-        print("2. Вывести все записи")
-        print("3. Сортировать записи по тегам")
-        print("4. Найти записи по тексту")
-        print("5. Изменить запись")
-        print("6. Удалить запись")
-        print("0. Выйти из блокнота")
-        print("=========================\n")
+    # def display_menu(self):
+    #     print("\n===== Меню блокнота =====")
+    #     print("1. Добавить запись")
+    #     print("2. Вывести все записи")
+    #     print("3. Сортировать записи по тегам")
+    #     print("4. Найти записи по тексту")
+    #     print("5. Изменить запись")
+    #     print("6. Удалить запись")
+    #     print("0. Выйти из блокнота")
+    #     print("=========================\n")
 
-    def help(self):
-        print("\n===== Справка по блокноту =====")
-        print("add_note - добавить новую запись")
-        print("display_all_notes - вывести все записи")
-        print("sort_notes - сортировать записи по тегам")
-        print("find_notes - найти записи по тексту")
-        print("change_note - изменить запись")
-        print("delete_note - удалить запись")
-        print("exit - выйти из блокнота")
-        print("==============================\n")
+    # def help(self):
+    #     print("\n===== Справка по блокноту =====")
+    #     print("add_note - добавить новую запись")
+    #     print("display_all_notes - вывести все записи")
+    #     print("sort_notes - сортировать записи по тегам")
+    #     print("find_notes - найти записи по тексту")
+    #     print("change_note - изменить запись")
+    #     print("delete_note - удалить запись")
+    #     print("exit - выйти из блокнота")
+    #     print("==============================\n")
 
     def add_note_from_user(self):
         input_text = input("Введите текст записи: ")
@@ -176,36 +184,28 @@ class NoteBook(UserList):
             print("Указанный индекс записи не существует.")
 
     
-def get_user_input(prompt):
-    return input(prompt)
+# def get_user_input(prompt):
+#     return input(prompt)
 
+
+# This must call
 def note_main():
-    notebook = Notebook()
+    notebook = NoteBook()
 
     while True:
-        menu = """
-        Menu:
-        1. Add Note
-        2. Search note
-        3. Edit note
-        4. Delete Note
-        5. Sort Notes by tag
-        6. Exit
-        """
-
         print(menu)
 
-        choice = get_user_input("Please choose: ")
+        choice = input("Please choose: ")
 
         if choice == "1":
-            title = get_user_input("Please enter title name: ")
-            description = get_user_input("Please enter description: ")
-            tag = get_user_input("Please enter tag: ")
+            title = input("Please enter title name: ")
+            description = input("Please enter description: ")
+            tag = input("Please enter tag: ")
             notebook.add_note(title, description, tag)
             print("Note has been added successfully!")
 
         elif choice == "2":
-            keyword = get_user_input("Enter key word for search: ")
+            keyword = input("Enter key word for search: ")
             found_notes = notebook.search_notes(keyword)
             if found_notes:
                 print("Search results:")
@@ -215,15 +215,15 @@ def note_main():
                 print("Note is not found.")
 
         elif choice == "3":
-            note_index = int(get_user_input("Please enter note number you want to edit: "))
-            new_title = get_user_input("Enter a new title: ")
-            new_description = get_user_input("Enter a new description: ")
-            new_tag = get_user_input("Enter a new tag: ")
-            notebook.edit_note(note_index, new_title, new_description, new_tag)
+            note_index = int(input("Please enter note number you want to edit: "))
+            new_title = input("Enter a new title: ")
+            new_description = input("Enter a new description: ")
+            new_tag = input("Enter a new tag: ")
+            notebook.change_note(note_index, new_title, new_description, new_tag)
             print("Note has been edited successfully!")
 
         elif choice == "4":
-            note_index = int(get_user_input("Please enter note number you want to be removed: "))
+            note_index = int(input("Please enter note number you want to be removed: "))
             notebook.delete_note(note_index)
             print("Note has been removed successfully")
 
