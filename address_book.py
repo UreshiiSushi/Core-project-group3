@@ -21,6 +21,7 @@ help_message = """Use next commands:
     <delete> 'name' - delete name and phones from the dictionary
     <find> 'info' - find all records includes 'info' in Name or Phone
     <hello> - greeting
+    <email> 'name' [email@domain.com] - show email for specified contact OR change it
     <seek> 'name' 'phone' - find phone for name in the dictionary
     <phone> 'name' - show phone number for this name
     <remove_phone> 'name' 'phone' - remove phone for this name
@@ -117,15 +118,20 @@ class Phone(Field):
 
 
 class Record:
-    def __init__(self, name, phone: str = None, birthday_date: str = None, email=None):
+    def __init__(
+        self, name, phone: str = None, birthday_date: str = None, email: str = None
+    ):
         self.name = Name(name)
         self.phones: list(Phone) = []
         self.birthday = None
+        self.email = None
         if phone:
             self.phones.append(Phone(phone))
         if birthday_date:
-            self.birthday = birthday_date
-        self.email = email
+            self.birthday = birthday_date  # Birthday(birthday_date)
+        if email:
+            self.email = Email(email)
+
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -167,10 +173,19 @@ class Record:
             if future_bd > now_date:
                 return (future_bd - now_date).days
             else:
-                future_bd = future_bd.replace(year=future_bd.year+1)
+                future_bd = future_bd.replace(year=future_bd.year + 1)
                 return (future_bd - now_date).days
         else:
             raise DateError()
+
+    def add_change_email(self, email: str = None) -> str:
+        if email:
+            self.email = Email(email)
+            return (
+                f"Email for contsct {self.name} was succefully changed to {self.email}"
+            )
+        if not email:
+            return f"{self.name.value} has an email {self.email}"
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
@@ -212,7 +227,7 @@ class AddressBook(UserDict):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
             if quantity:
-                yield values[self.counter:self.counter+quantity]
+                yield values[self.counter : self.counter + quantity]
                 self.counter += quantity
             else:
                 yield values
@@ -231,6 +246,7 @@ def input_error(func):
             return "Wrong phone number. Try again"
         except DateError:
             return "Birthday date error or no birthday data"
+
     return inner
 
 
@@ -286,6 +302,7 @@ def birthday_in(*args):
 phone_book = AddressBook()
 
 
+
 @input_error
 def add_record(name: str, phone: str):
     global phone_book
@@ -309,6 +326,15 @@ def change_record(name: str, phone: str, new_phone: str):
     # if rec:
     #     phone_book[name] = new_phone
     # return f"Changed phone {name=} {new_phone=}"
+
+
+@input_error
+def add_change_email(name: str, email: str = None):
+    global phone_book
+    rec: Record = phone_book.find(name)
+    if rec:
+        return rec.add_change_email(email)
+    return f"Contact {name} wasn`t found"
 
 
 @input_error
@@ -349,6 +375,7 @@ def load_book() -> str:
     for k, v in loaded_book.items():
         phone_book.data[k] = v
     return f"Phonebook loaded"
+
 
 # if all([save_file.exists(), save_file.stat().st_size> 0]):
 #     print(load_book())
@@ -408,7 +435,7 @@ def find(search: str) -> str or None:
         result = "\n".join(list(map(str, rec)))
         return f"Finded \n{result}"
     else:
-        return f'Nothing was found for your request.'
+        return f"Nothing was found for your request."
 
 
 def show_all(*args):
@@ -438,30 +465,32 @@ def load_book() -> str:
     return f"Phonebook loaded"
 
 
+
+
+COMMANDS = {
+    greeting: "hello",
+    add_birhday: "add_b",
+    add_record: "add",
+    add_phone: "add_phone",
+    birthday_in: "birthday",
+    change_record: "change",
+    days_to_birthday: "days_to_birthday",
+    find: "find",
+    help: "help",
+    show_all: "show_all",
+    save_book: "save",
+    load_book: "load",
+    stop_command: ("good_bye", "close", "exit"),
+    add_change_email: "email",
+}
+
+# TODO: implement addressbook_main()
 def stop_command(*args) -> str:
     return f"{save_book()}. Good bye!"
 
 
 def unknown(*args):
     return "Unknown command. Try again."
-
-
-COMMANDS = {greeting: "hello",
-            add_birhday: "add_birthday",
-            add_record: "add",
-            add_phone: "add_phone",
-            birthday_in: "birthday",
-            change_record: "change",
-            days_to_birthday: "days_to_birthday",
-            find: "find",
-            help: "help",
-            show_all: "show_all",
-            save_book: "save",
-            load_book: "load",
-            stop_command: "good_bye",
-            stop_command: "close",
-            stop_command: "exit"
-            }
 
 
 def parcer(text: str):
@@ -494,6 +523,7 @@ def addressbook_main():
         print(result)
         if result == "Phonebook saved. Good bye!":
             break
+
 
 
 if __name__ == "__main__":
@@ -544,6 +574,10 @@ if __name__ == "__main__":
     # Видалення запису Jane
     book.delete("Jane")
 
-    # # Тест емейлу
-    # letter_to = Email("asdf@domain.com")
-    # print(letter_to)
+    # Тест емейлу
+    letter_to = Email("asdf@domain.com")
+    print(letter_to)
+    print(john_record.add_change_email("hjdshj@jsdhjk.com"))
+    print(john_record.add_change_email("a111@jsdhjk.com"))
+    print(john_record.add_change_email())
+    print(john_record.add_change_email("орлоо@jsdhjk.com"))
