@@ -2,13 +2,14 @@ from collections import UserList
 
 #TODO: add help string
 
+
 class Notes:
     def __init__(self, title, description, tag):
         self.title = title
         self.description = description
         self.tag = tag
 
-class Notebook:
+class Notebook(UserList):
     def __init__(self):
         self.notes = []
 
@@ -20,7 +21,7 @@ class Notebook:
     def extract_tags(self, text):
         tags = [word[1:] for word in text.split() if word.startswith("#")]
         return tags
-
+      
     def search_notes(self, search_text):
         matching_notes = []
         for index, note in enumerate(self.data):
@@ -34,7 +35,16 @@ class Notebook:
         else:
             print("Нет записей, соответствующих поисковому запросу.")
 
-    def edit_note(self, note_index, new_text):
+    def sort_notes_by_tags(self):
+        self.data.sort(key=lambda note: len(note["tags"]))
+
+    @staticmethod
+    def add_note_from_user():
+        notebook = NoteBook()
+        input_text = input("Введите текст записи: ")
+        notebook.add_note(input_text)
+
+    def change_note(self, note_index, new_text):
         if 0 <= note_index < len(self.data):
             tags = self.extract_tags(new_text)
             self.data[note_index] = {"text": new_text, "tags": tags}
@@ -49,15 +59,7 @@ class Notebook:
         else:
             print("Указанный индекс записи не существует.")
 
-    def sort_notes_by_tags(self):
-        self.data.sort(key=lambda note: len(note["tags"]))
-
-    @staticmethod
-    def add_note_from_user():
-        notebook = NoteBook()
-        input_text = input("Введите текст записи: ")
-        notebook.add_note(input_text)
-
+    
 def get_user_input(prompt):
     return input(prompt)
 
@@ -126,3 +128,14 @@ def note_main():
 
 if __name__ == "__note_main__":
     note_main()
+# Пример использования
+
+    notebook = NoteBook()
+
+    # Пример добавления записи с тегами
+    input_text = "Сегодня я поучаствовал в #программирование. Было интересно!"
+    notebook.add_note(input_text)
+
+    # Пример добавления записи через пользовательский ввод
+    NoteBook.add_note_from_user()
+
