@@ -15,6 +15,7 @@ help_message = """Use next commands:
     <add> 'name' 'phone'  - add name and phone number to the dictionary
     <add_b> 'name' 'birthday' - add birthday date to the name in dictionary
     <add_phone> 'name' 'phone'  - add phone number to the name in dictionary
+    <add_adr> 'name' 'adress' - add adress to the name in dictionary
     <change> 'name' 'phone' 'new_phone' - change phone number for this name
     <days_to_birthday> 'name' - return number days to birhday
     <birthday> 'num' - return records with birthday date in 'num' days
@@ -24,7 +25,9 @@ help_message = """Use next commands:
     <email> 'name' [email@domain.com] - show email for specified contact OR change it
     <seek> 'name' 'phone' - find phone for name in the dictionary
     <phone> 'name' - show phone number for this name
+    <adress> 'name' - show adres for this name
     <remove_phone> 'name' 'phone' - remove phone for this name
+    <remove_adr> 'name' - remove adress for this name 
     <show_all>  -  show all records in the dictionary
     <show_all> 'N' - show records by N records on page
     <exit> or <close> or <good_bye> - exit from module"""
@@ -55,6 +58,10 @@ class Field:
 
 
 class Name(Field):
+    ...
+
+
+class Adress(Field):
     ...
 
 
@@ -119,12 +126,13 @@ class Phone(Field):
 
 class Record:
     def __init__(
-        self, name, phone: str = None, birthday_date: str = None, email: str = None
+        self, name, phone: str = None, birthday_date: str = None, email: str = None, adress: str = None
     ):
         self.name = Name(name)
         self.phones: list(Phone) = []
         self.birthday = None
         self.email = None
+        self.adress = None
         if phone:
             self.phones.append(Phone(phone))
         if birthday_date:
@@ -132,10 +140,23 @@ class Record:
         if email:
             self.email = Email(email)
 
-
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
         return f"Added phone {phone} to contact {self.name}"
+
+    # methods for working with the User address
+    def add_adress(self, adress: str):
+        self.adress = Adress(adress)
+
+    def show_adress(self):
+        if self.adress:
+            return f"{self.name}'s adress: {self.adress}"
+        else:
+            return f"{self.name}'s adress is empty"
+
+    def del_adress(self):
+        self.adress = None
+    # End adress block
 
     def add_birthday(self, bd_date):
         self.birthday = bd_date
@@ -189,8 +210,8 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}".format(
-            self.name, self.birthday, phones
+        return "Contact name: {}, birthday: {}, phones: {}, adress:{}".format(
+            self.name, self.birthday, phones, self.adress
         )
 
 
@@ -227,7 +248,7 @@ class AddressBook(UserDict):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
             if quantity:
-                yield values[self.counter : self.counter + quantity]
+                yield values[self.counter: self.counter + quantity]
                 self.counter += quantity
             else:
                 yield values
@@ -300,7 +321,6 @@ def birthday_in(*args):
 
 # save_file = Path("phone_book.bin")
 phone_book = AddressBook()
-
 
 
 @input_error
@@ -465,6 +485,42 @@ def load_book() -> str:
     return f"Phonebook loaded"
 
 
+def stop_command(*args) -> str:
+    return f"{save_book()}. Good bye!"
+
+
+@input_error
+def add_adress(*args):
+    # add addresses for an existing user
+    name: str = args[0]
+    adress: str = ' '.join(args).replace(name, '', 1)
+    rec: Record = phone_book.get(name)
+    if rec:
+        rec.add_adress(adress)
+        return f"{rec.name}'s added adress {adress}"
+    else:
+        raise KeyError()
+
+
+def show_adress(*args):
+    # show the address for an existing user
+    name = args[0]
+    rec: Record = phone_book.get(name)
+    if rec:
+        return rec.show_adress()
+    else:
+        raise KeyError()
+
+
+def remove_adr(*args):
+    # delete the address for the existing user
+    name = args[0]
+    rec: Record = phone_book.get(name)
+    if rec:
+        rec.del_adress()
+        return f"{rec.name}'s del adress"
+    else:
+        raise KeyError()
 
 
 COMMANDS = {
@@ -472,6 +528,8 @@ COMMANDS = {
     add_birhday: "add_b",
     add_record: "add",
     add_phone: "add_phone",
+    add_adress: "add_adress",
+    show_adress: "adress",
     birthday_in: "birthday",
     change_record: "change",
     days_to_birthday: "days_to_birthday",
@@ -480,13 +538,12 @@ COMMANDS = {
     show_all: "show_all",
     save_book: "save",
     load_book: "load",
-    stop_command: ("good_bye", "close", "exit"),
+    remove_adr: "del_adress",
+    stop_command: ("good_bye", "close", "exit", "stop"),
     add_change_email: "email",
 }
 
 # TODO: implement addressbook_main()
-def stop_command(*args) -> str:
-    return f"{save_book()}. Good bye!"
 
 
 def unknown(*args):
@@ -496,7 +553,8 @@ def unknown(*args):
 def parcer(text: str):
     for func, kw in COMMANDS.items():
         command = text.rstrip().split()
-        if text.lower().startswith(kw) and kw == command[0].lower():
+        # ol.pripa було kw == command[0].lower() тоді не спрацьовувала умова для  ("good_bye", "close", "exit", "stop"), змінив на
+        if text.lower().startswith(kw) and command[0].lower() in kw:
             return func, text[len(kw):].strip().split()
     return unknown, []
 
@@ -509,7 +567,7 @@ def addressbook_main():
         ...
     while True:
         menu_completer = WordCompleter(
-            ['add', 'add_birthday', 'add_phone', 'birthday', 'change', 'days_to_birthday',
+            ['add', 'add_birthday', 'add_phone', 'add_adress', 'adress', 'birthday', 'change', 'days_to_birthday', 'del_adress'
              'find', 'hello', 'help', 'show_all',
              'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
 
@@ -525,59 +583,59 @@ def addressbook_main():
             break
 
 
-
 if __name__ == "__main__":
-    # Створення нової адресної книги
-    book = AddressBook()
+    addressbook_main()
+    # # Створення нової адресної книги
+    # book = AddressBook()
 
-    # Створення запису для John
-    john_record = Record("John")
-    john_record.add_phone("1234567890")
-    john_record.add_phone("5555555555")
+    # # Створення запису для John
+    # john_record = Record("John")
+    # john_record.add_phone("1234567890")
+    # john_record.add_phone("5555555555")
 
-    # Додавання запису John до адресної книги
-    book.add_record(john_record)
+    # # Додавання запису John до адресної книги
+    # book.add_record(john_record)
 
-    # Створення та додавання нового запису для Jane
-    jane_record = Record("Jane")
-    jane_record.add_phone("9876543210")
-    book.add_record(jane_record)
-    bill_record = Record("Bill", "7234592343")
-    dow_record = Record("Dow")
-    book.add_record(bill_record)
-    book.add_record(dow_record)
-    # Виведення всіх записів у книзі
-    for name, record in book.data.items():
-        print(record)
+    # # Створення та додавання нового запису для Jane
+    # jane_record = Record("Jane")
+    # jane_record.add_phone("9876543210")
+    # book.add_record(jane_record)
+    # bill_record = Record("Bill", "7234592343")
+    # dow_record = Record("Dow")
+    # book.add_record(bill_record)
+    # book.add_record(dow_record)
+    # # Виведення всіх записів у книзі
+    # for name, record in book.data.items():
+    #     print(record)
 
-    for b in book.iterator(4):
-        print(b)
+    # for b in book.iterator(4):
+    #     print(b)
 
-    # Знаходження та редагування телефону для John
-    john = book.find("John")
-    print(john)
-    john.edit_phone("1234567890", "1112223333")
+    # # Знаходження та редагування телефону для John
+    # john = book.find("John")
+    # print(john)
+    # john.edit_phone("1234567890", "1112223333")
 
-    print(john)  # Виведення: Contact name: John, phones: 1112223333; 5555555555
+    # print(john)  # Виведення: Contact name: John, phones: 1112223333; 5555555555
 
-    # Пошук конкретного телефону у записі John
-    found_phone = john.find_phone("5555555555")
-    print(f"{john.name}: {found_phone}")  # Виведення: 5555555555
+    # # Пошук конкретного телефону у записі John
+    # found_phone = john.find_phone("5555555555")
+    # print(f"{john.name}: {found_phone}")  # Виведення: 5555555555
 
-    # Додавання днів народження і вивід днів до нього
-    john.add_birthday("1993-12-01")
-    print(john.days_to_birthday())
-    jane_record.add_birthday("2004-09-11")
-    print(jane_record.days_to_birthday())
-    print(dow_record.days_to_birthday())
+    # # Додавання днів народження і вивід днів до нього
+    # john.add_birthday("1993-12-01")
+    # print(john.days_to_birthday())
+    # jane_record.add_birthday("2004-09-11")
+    # print(jane_record.days_to_birthday())
+    # print(dow_record.days_to_birthday())
 
-    # Видалення запису Jane
-    book.delete("Jane")
+    # # Видалення запису Jane
+    # book.delete("Jane")
 
-    # Тест емейлу
-    letter_to = Email("asdf@domain.com")
-    print(letter_to)
-    print(john_record.add_change_email("hjdshj@jsdhjk.com"))
-    print(john_record.add_change_email("a111@jsdhjk.com"))
-    print(john_record.add_change_email())
-    print(john_record.add_change_email("орлоо@jsdhjk.com"))
+    # # Тест емейлу
+    # letter_to = Email("asdf@domain.com")
+    # print(letter_to)
+    # print(john_record.add_change_email("hjdshj@jsdhjk.com"))
+    # print(john_record.add_change_email("a111@jsdhjk.com"))
+    # print(john_record.add_change_email())
+    # print(john_record.add_change_email("орлоо@jsdhjk.com"))
