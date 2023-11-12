@@ -1,10 +1,13 @@
 # from _collections_abc import Iterator
-import re
-import pickle
-from pathlib import Path
-from itertools import islice
 from collections import UserDict
 from datetime import date, datetime
+from itertools import islice
+from pathlib import Path
+import pickle
+import re
+
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit import prompt
 
 save_file = Path("phone_book.bin")
 
@@ -78,23 +81,6 @@ class Email(Field):
 
 
 class Birthday(Field):
-    # def __init__(self, bd: str):
-    #     self.__birthday = None
-    #     self.birthday = bd
-
-    # @property
-    # def birthday(self):
-    #     return self.__birthday
-
-    # @birthday.setter
-    # def birthday(self, bd):
-    #     if re.match(r"[0-9]{4}\-[0-9]{2}\-[0-9]{2}", bd):
-    #         bd_date = list(map(int, bd.split("-")))
-    #         birthday = date(*bd_date)
-    #         # self.__birthday = birthday
-    #         self.birthday = birthday
-    #     else:
-    #         raise ValueError("Wrong date format. Use YYYY-MM-DD")
     def __init__(self, birthday) -> None:
         self.__birthday = None
         self.birthday = birthday
@@ -146,12 +132,13 @@ class Record:
         if email:
             self.email = Email(email)
 
+
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
         return f"Added phone {phone} to contact {self.name}"
 
-    def add_birthday(self, bd_date):  # str):
-        self.birthday = bd_date  # Birthday(bd_date)
+    def add_birthday(self, bd_date):
+        self.birthday = bd_date
 
     def find_phone(self, phone: str):
         result = None
@@ -178,7 +165,7 @@ class Record:
         if not edit_check:
             raise ValueError
 
-    def days_to_birthday(self) -> int:  # timedelta or str:
+    def days_to_birthday(self) -> int:
         if self.birthday:
             now_date = date.today()
             future_bd = self.birthday
@@ -190,7 +177,6 @@ class Record:
                 return (future_bd - now_date).days
         else:
             raise DateError()
-            # return f"No birthday set"
 
     def add_change_email(self, email: str = None) -> str:
         if email:
@@ -244,7 +230,7 @@ class AddressBook(UserDict):
                 yield values[self.counter : self.counter + quantity]
                 self.counter += quantity
             else:
-                yield values  # [self.counter:self.counter+quantity]
+                yield values
                 break
 
 
@@ -313,7 +299,8 @@ def birthday_in(*args):
 
 
 # save_file = Path("phone_book.bin")
-# phone_book = AddressBook()
+phone_book = AddressBook()
+
 
 
 @input_error
@@ -452,9 +439,6 @@ def find(search: str) -> str or None:
 
 
 def show_all(*args):
-    # for p in phone_book.iterator():
-    #     print(p)
-    #     input(">>>Press Enter for next record")
     try:
         if args[0]:
             for rec in phone_book.iterator(int(args[0])):
@@ -481,8 +465,6 @@ def load_book() -> str:
     return f"Phonebook loaded"
 
 
-def stop_command():
-    ...
 
 
 COMMANDS = {
@@ -503,10 +485,45 @@ COMMANDS = {
 }
 
 # TODO: implement addressbook_main()
+def stop_command(*args) -> str:
+    return f"{save_book()}. Good bye!"
+
+
+def unknown(*args):
+    return "Unknown command. Try again."
+
+
+def parcer(text: str):
+    for func, kw in COMMANDS.items():
+        command = text.rstrip().split()
+        if text.lower().startswith(kw) and kw == command[0].lower():
+            return func, text[len(kw):].strip().split()
+    return unknown, []
 
 
 def addressbook_main():
-    ...
+    try:
+        if all([save_file.exists(), save_file.stat().st_size > 0]):
+            print(load_book())
+    except:
+        ...
+    while True:
+        menu_completer = WordCompleter(
+            ['add', 'add_birthday', 'add_phone', 'birthday', 'change', 'days_to_birthday',
+             'find', 'hello', 'help', 'show_all',
+             'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
+
+        user_input = prompt("Enter user name and phone number or 'help' for help: ",
+                            completer=menu_completer)
+        print('You said: %s' % user_input)
+
+        # user_input = input(">>>")
+        func, data = parcer(user_input)
+        result = func(*data)
+        print(result)
+        if result == "Phonebook saved. Good bye!":
+            break
+
 
 
 if __name__ == "__main__":
