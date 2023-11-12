@@ -1,6 +1,7 @@
 from collections import UserList
 
-#TODO: add help string
+# TODO: add help string
+
 
 
 class Notes:

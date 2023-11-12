@@ -1,8 +1,8 @@
-import sys
-from pathlib import Path
+# import sys
 import os
-import shutil
+from pathlib import Path
 import re
+import shutil
 from zipfile import ZipFile
 
 CATEGORIES = {"audio": [".mp3", ".wav", ".flac", ".wma"],
