@@ -1,11 +1,57 @@
 from collections import UserList
+import pickle
 
 
 class NoteBook(UserList):
-    def add_note(self, text):
-        tags = self.extract_tags(text)
-        self.data.append({"text": text, "tags": tags})
-        print("Запись добавлена в блокнот.")
+    def __init__(self):
+        super().__init__()
+        self.load_notes()
+
+    def load_notes(self):
+        try:
+            with open("notes.bin", "rb") as file:
+                self.data = pickle.load(file)
+                print("Заметки успешно загружены.")
+        except FileNotFoundError:
+            print("Файл заметок не найден. Создан новый блокнот.")
+        except Exception as e:
+            print(f"Ошибка при загрузке заметок: {e}")
+
+    def save_notes(self):
+        with open("notes.bin", "wb") as file:
+            pickle.dump(self.data, file)
+            print("Заметки успешно сохранены.")
+
+    def note_main(self):
+        while True:
+            self.display_menu()
+            choice = input("Введите номер действия (help для справки): ")
+
+            if choice == "1":
+                self.add_note_from_user()
+            elif choice == "2":
+                self.display_all_notes()
+            elif choice == "3":
+                self.sort_notes_by_tags()
+                print("Записи отсортированы по тегам.")
+            elif choice == "4":
+                search_text = input("Введите текст для поиска: ")
+                self.find_notes(search_text)
+            elif choice == "5":
+                note_index = int(input("Введите индекс записи для изменения: "))
+                new_text = input("Введите новый текст: ")
+                self.change_note(note_index, new_text)
+            elif choice == "6":
+                note_index = int(input("Введите индекс записи для удаления: "))
+                self.delete_note(note_index)
+            elif choice == "help":
+                self.help()
+            elif choice == "0":
+                self.save_notes()
+                print("Выход из блокнота.")
+                break
+            else:
+                print("Некорректный ввод. Пожалуйста, выберите действие из меню.")
 
     def display_menu(self):
         print("\n===== Меню блокнота =====")
@@ -115,6 +161,7 @@ class NoteBook(UserList):
 # Пример использования
 if __name__ == "__main__":
     notebook = NoteBook()
+    notebook.note_main()
 
     # Пример добавления записей с тегами
     input_text_1 = "Сегодня я поучаствовал в #программирование. Было интересно!"
