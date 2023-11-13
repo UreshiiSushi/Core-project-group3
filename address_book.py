@@ -22,6 +22,7 @@ help_message = """Use next commands:
     <birthday> 'num' - return records with birthday date in 'num' days
     <delete> 'name' - delete name and phones from the dictionary
     <find> 'info' - find all records includes 'info' in Name or Phone
+    <search> 'str': min 3 symbols - find all records includes 'str' in Name or Phone or Adress
     <hello> - greeting
     <email> 'name' [email@domain.com] - add OR change email for specified Name
     <phone> 'name' - show phone number for this name
@@ -210,7 +211,7 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress:{}".format(
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress: {}".format(
             self.name, self.birthday, phones, self.email, self.adress
         )
 
@@ -232,6 +233,22 @@ class AddressBook(UserDict):
                 return self.data.get(name)
         else:
             return None
+
+    def search(self, search_str: str):
+        keys = []
+        if search_str.isdigit():
+            print('Search Phone and Name and Adress')
+            for key, record in self.items():
+                if str(record.name).find(search_str) >= 0 or record.find_phone(search_str.lower()) != None or str(record.adress).lower().find(search_str.lower()) >= 0:
+                    keys.append(key)
+            return keys
+
+        else:
+            print('Search Name and Adress')
+            for key, record in self.items():
+                if str(record.name).lower().find(search_str.lower()) >= 0 or str(record.adress).lower().find(search_str.lower()) >= 0:
+                    keys.append(key)
+            return keys
 
     def delete(self, name: str):
         if name in self.data.keys():
@@ -280,9 +297,11 @@ def input_error(func):
         except KeyError:
             return "Unknown name. Try again"
         except ValueError:
-            return "Wrong phone number. Try again"
+            return "Wrong format. Try again"  # Було Wrong phone number.
         except DateError:
             return "Birthday date error or no birthday data"
+        except IndexError:
+            return "Not enough params. Try again"
 
     return inner
 
@@ -307,7 +326,7 @@ def add_birhday(*args):
         rec.add_birthday(birhday.date())
         return f"{args[0].capitalize()}'s birthday added {args[1]}"
     else:
-        raise DateError()
+        raise KeyError()
 
 
 @input_error
@@ -507,13 +526,10 @@ def load_book() -> str:
 #     return f"Phonebook loaded"
 
 
-
-
 @input_error
-def add_adress(*args):
+def add_adress(name, *args):
     # add addresses for an existing user
-    name: str = args[0]
-    adress: str = ' '.join(args).replace(name, '', 1)
+    adress: str = ' '.join(args)
     rec: Record = phone_book.get(name)
     if rec:
         rec.add_adress(adress)
@@ -542,8 +558,22 @@ def remove_adr(*args):
     else:
         raise KeyError()
 
+
+@input_error
+def search(str_search):
+    if len(str_search) < 3:
+        return f'minimum number of characters to search is 3'
+    else:
+        result = ''
+        for key in phone_book.search(str_search):
+            result += f'{str(phone_book[key])}\n'
+        print(result)
+        return f'Search {str_search}'
+
+
 def stop_command(*_):
     return phone_book.save_book()
+
 
 def unknown(*args):
     return "Unknown command. Try again."
@@ -560,6 +590,7 @@ COMMANDS = {
     change_record: "change",
     days_to_birthday: "days_to_birthday",
     find: "find",
+    search: "search",
     help: "help",
     show_all: "show_all",
     save_book: "save",
@@ -568,8 +599,6 @@ COMMANDS = {
     stop_command: ("good_bye", "close", "exit", "stop"),
     add_change_email: "email",
 }
-
-
 
 
 def parcer(text: str):
@@ -598,12 +627,13 @@ def addressbook_main():
             'add_phone': {'380'},
             'add_birthday': {'dd/mm/YYYY'},
             'birthday': {'num_days': None},
-            'add_adress': {'name adress'}, 
+            'add_adress': {'name adress'},
             'adress': {'name': None},
             'change': {'name phone new_phone': None},
             'days_to_birthday': {'name': None},
             'email': {'name email@': None},
             'find': {'anything': None},
+            'search': {'anything min 3 symbol': None},
             'hello': None,
             'help': None,
             'show_all': {'20'},
