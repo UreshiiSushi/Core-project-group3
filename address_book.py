@@ -6,14 +6,15 @@ from pathlib import Path
 import pickle
 import re
 
-from prompt_toolkit.completion import WordCompleter
+# from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit import prompt
 
 save_file = Path("phone_book.bin")
 
 help_message = """Use next commands:
     <add> 'name' 'phone'  - add name and phone number to the dictionary
-    <add_b> 'name' 'birthday' - add birthday date to the name in dictionary
+    <add_birthday> 'name' 'birthday' - add birthday date to the name in dictionary
     <add_phone> 'name' 'phone'  - add phone number to the name in dictionary
     <change> 'name' 'phone' 'new_phone' - change phone number for this name
     <days_to_birthday> 'name' - return number days to birhday
@@ -21,8 +22,7 @@ help_message = """Use next commands:
     <delete> 'name' - delete name and phones from the dictionary
     <find> 'info' - find all records includes 'info' in Name or Phone
     <hello> - greeting
-    <email> 'name' [email@domain.com] - show email for specified contact OR change it
-    <seek> 'name' 'phone' - find phone for name in the dictionary
+    <email> 'name' [email@domain.com] - add OR change email for specified Name
     <phone> 'name' - show phone number for this name
     <remove_phone> 'name' 'phone' - remove phone for this name
     <show_all>  -  show all records in the dictionary
@@ -181,7 +181,7 @@ class Record:
         if email:
             self.email = Email(email)
             return (
-                f"Email for contsct {self.name} was succefully changed to {self.email}"
+                f"Email for contact {self.name} was succefully changed to {self.email}"
             )
         if not email:
             return f"{self.name.value} has an email {self.email}"
@@ -226,7 +226,7 @@ class AddressBook(UserDict):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
             if quantity:
-                yield values[self.counter : self.counter + quantity]
+                yield values[self.counter: self.counter + quantity]
                 self.counter += quantity
             else:
                 yield values
@@ -495,7 +495,7 @@ def unknown(*args):
 
 COMMANDS = {
     greeting: "hello",
-    add_birhday: "add_b",
+    add_birhday: "add_birthday",
     add_record: "add",
     add_phone: "add_phone",
     birthday_in: "birthday",
@@ -509,7 +509,6 @@ COMMANDS = {
     stop_command: ("good_bye", "close", "exit"),
     add_change_email: "email",
 }
-
 
 
 
@@ -528,33 +527,32 @@ def addressbook_main():
     except:
         ...
     while True:
-        menu_completer = WordCompleter(
-            [
-                "add",
-                "add_birthday",
-                "add_phone",
-                "birthday",
-                "change",
-                "days_to_birthday",
-                "find",
-                "hello",
-                "help",
-                "show_all",
-                "exit",
-                "close",
-                "good_bye",
-            ],
-            ignore_case=True,
-            WORD=True,
-        )  # , match_middle=True)
+        # menu_completer = WordCompleter(
+        #     ['add', 'add_birthday', 'add_phone', 'birthday', 'change', 'days_to_birthday',
+        #      'email', 'find', 'hello', 'help', 'show_all',
+        #      'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
 
-        user_input = prompt(
-            "Enter user name and phone number or 'help' for help: ",
-            completer=menu_completer,
-        )
-        print("You said: %s" % user_input)
+        menu_completer = NestedCompleter.from_nested_dict({
+            'add': {'name phone': None},
+            'add_phone': {'380'},
+            'add_birthday': {'dd/mm/YYYY'},
+            'birthday': {'num_days': None},
+            'change': {'name phone new_phone': None},
+            'days_to_birthday': {'name': None},
+            'email': {'name email@': None},
+            'find': {'anything': None},
+            'hello': None,
+            'help': None,
+            'show_all': {'20'},
+            'exit': None,
+            'close': None,
+            'good_buy': None
+        })
 
-        # user_input = input(">>>")
+        user_input = prompt("Enter user name and phone number or 'help' for help: ",
+                            completer=menu_completer)
+        # print('You said: %s' % user_input)
+
         func, data = parcer(user_input)
         result = func(*data)
         print(result)
