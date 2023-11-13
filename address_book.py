@@ -485,8 +485,12 @@ def load_book() -> str:
 #     return f"Phonebook loaded"
 
 
+
 def stop_command(*_):
     return phone_book.save_book()
+
+def unknown(*args):
+    return "Unknown command. Try again."
 
 
 COMMANDS = {
@@ -507,13 +511,6 @@ COMMANDS = {
 }
 
 
-# TODO: implement addressbook_main()
-def stop_command(*args) -> str:
-    return f"{phone_book.save_book()}. Good bye!"
-
-
-def unknown(*args):
-    return "Unknown command. Try again."
 
 
 def parcer(text: str):

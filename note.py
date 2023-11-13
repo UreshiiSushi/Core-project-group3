@@ -4,6 +4,7 @@ import pickle
 
 # TODO: add help string
 
+
 save_file = Path("notes.bin")
 
 
@@ -17,6 +18,11 @@ class Notes:
 class Notebook(UserList):
     def __init__(self):
         self.notes = []
+
+# class Notebook(UserList):
+#     def __init__(self):
+#         self.notes = []
+
 
 
 class NoteBook(UserList):
@@ -80,6 +86,7 @@ class NoteBook(UserList):
         print("6. Удалить запись")
         print("0. Выйти из блокнота")
         print("=========================\n")
+
 
     def add_note_from_user(self):
         input_text = input("Введите текст записи: ")
@@ -166,6 +173,7 @@ class NoteBook(UserList):
             print(f"Запись с индексом {note_index} удалена из блокнота.")
         else:
             print("Указанный индекс записи не существует.")
+
 
 
 notebook = NoteBook()
