@@ -188,8 +188,8 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}".format(
-            self.name, self.birthday, phones
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}".format(
+            self.name, self.birthday, phones, self.email
         )
 
 
@@ -516,7 +516,7 @@ COMMANDS = {
 def parcer(text: str):
     for func, kw in COMMANDS.items():
         command = text.rstrip().split()
-        if text.lower().startswith(kw) and kw == command[0].lower():
+        if text.lower().startswith(kw) or kw == command[0].lower():
             return func, text[len(kw) :].strip().split()
     return unknown, []
 
@@ -565,6 +565,7 @@ def addressbook_main():
 if __name__ == "__main__":
     # Створення нової адресної книги
     book = AddressBook()
+    addressbook_main()
 
     # Створення запису для John
     john_record = Record("John")
