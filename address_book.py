@@ -6,14 +6,15 @@ from pathlib import Path
 import pickle
 import re
 
-from prompt_toolkit.completion import WordCompleter
+# from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit import prompt
 
 save_file = Path("phone_book.bin")
 
 help_message = """Use next commands:
     <add> 'name' 'phone'  - add name and phone number to the dictionary
-    <add_b> 'name' 'birthday' - add birthday date to the name in dictionary
+    <add_birthday> 'name' 'birthday' - add birthday date to the name in dictionary
     <add_phone> 'name' 'phone'  - add phone number to the name in dictionary
     <add_adr> 'name' 'adress' - add adress to the name in dictionary
     <change> 'name' 'phone' 'new_phone' - change phone number for this name
@@ -22,8 +23,7 @@ help_message = """Use next commands:
     <delete> 'name' - delete name and phones from the dictionary
     <find> 'info' - find all records includes 'info' in Name or Phone
     <hello> - greeting
-    <email> 'name' [email@domain.com] - show email for specified contact OR change it
-    <seek> 'name' 'phone' - find phone for name in the dictionary
+    <email> 'name' [email@domain.com] - add OR change email for specified Name
     <phone> 'name' - show phone number for this name
     <adress> 'name' - show adres for this name
     <remove_phone> 'name' 'phone' - remove phone for this name
@@ -203,15 +203,15 @@ class Record:
         if email:
             self.email = Email(email)
             return (
-                f"Email for contsct {self.name} was succefully changed to {self.email}"
+                f"Email for contact {self.name} was succefully changed to {self.email}"
             )
         if not email:
             return f"{self.name.value} has an email {self.email}"
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}, adress:{}".format(
-            self.name, self.birthday, phones, self.adress
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress:{}".format(
+            self.name, self.birthday, phones, self.email, self.adress
         )
 
 
@@ -253,6 +253,22 @@ class AddressBook(UserDict):
             else:
                 yield values
                 break
+
+    def save_book(self) -> str:
+        with open(save_file, "wb") as file:
+            pickle.dump(self.data, file)
+        return f"Phonebook saved. Good bye!"
+
+    def load_book(self) -> str:
+        with open(save_file, "rb") as file:
+            data = file.read()
+            self.data = pickle.loads(data)
+        return f"Phonebook loaded"
+        # with open(save_file, "rb") as file:
+        #     loaded_book = pickle.load(file)
+        # for k, v in loaded_book.items():
+        #     self.data[k] = v
+        # return f"Phonebook loaded"
 
 
 def input_error(func):
@@ -381,20 +397,20 @@ def show_all():
         print(p)
 
 
-def save_book() -> str:
-    global phone_book
-    with open(save_file, "wb") as file:
-        pickle.dump(phone_book, file)
-    return f"Phonebook saved"
+# def save_book() -> str:
+#     global phone_book
+#     with open(save_file, "wb") as file:
+#         pickle.dump(phone_book, file)
+#     return f"Phonebook saved"
 
 
-def load_book() -> str:
-    global phone_book
-    with open(save_file, "rb") as file:
-        loaded_book = pickle.load(file)
-    for k, v in loaded_book.items():
-        phone_book.data[k] = v
-    return f"Phonebook loaded"
+# def load_book() -> str:
+#     global phone_book
+#     with open(save_file, "rb") as file:
+#         loaded_book = pickle.load(file)
+#     for k, v in loaded_book.items():
+#         phone_book.data[k] = v
+#     return f"Phonebook loaded"
 
 
 # if all([save_file.exists(), save_file.stat().st_size> 0]):
@@ -470,23 +486,27 @@ def show_all(*args):
 
 
 def save_book() -> str:
-    # global phone_book
-    with open(save_file, "wb") as file:
-        pickle.dump(phone_book, file)
-    return f"Phonebook saved"
+    return phone_book.save_book()
+
+
+#     # global phone_book
+# with open(save_file, "wb") as file:
+#     pickle.dump(phone_book, file)
+# return f"Phonebook saved"
 
 
 def load_book() -> str:
-    # global phone_book
-    with open(save_file, "rb") as file:
-        loaded_book = pickle.load(file)
-    for k, v in loaded_book.items():
-        phone_book.data[k] = v
-    return f"Phonebook loaded"
+    return phone_book.load_book()
 
 
-def stop_command(*args) -> str:
-    return f"{save_book()}. Good bye!"
+#     # global phone_book
+#     with open(save_file, "rb") as file:
+#         loaded_book = pickle.load(file)
+#     for k, v in loaded_book.items():
+#         phone_book.data[k] = v
+#     return f"Phonebook loaded"
+
+
 
 
 @input_error
@@ -522,10 +542,16 @@ def remove_adr(*args):
     else:
         raise KeyError()
 
+def stop_command(*_):
+    return phone_book.save_book()
+
+def unknown(*args):
+    return "Unknown command. Try again."
+
 
 COMMANDS = {
     greeting: "hello",
-    add_birhday: "add_b",
+    add_birhday: "add_birthday",
     add_record: "add",
     add_phone: "add_phone",
     add_adress: "add_adress",
@@ -543,11 +569,7 @@ COMMANDS = {
     add_change_email: "email",
 }
 
-# TODO: implement addressbook_main()
 
-
-def unknown(*args):
-    return "Unknown command. Try again."
 
 
 def parcer(text: str):
@@ -562,20 +584,38 @@ def parcer(text: str):
 def addressbook_main():
     try:
         if all([save_file.exists(), save_file.stat().st_size > 0]):
-            print(load_book())
+            print(phone_book.load_book())
     except:
         ...
     while True:
-        menu_completer = WordCompleter(
-            ['add', 'add_birthday', 'add_phone', 'add_adress', 'adress', 'birthday', 'change', 'days_to_birthday', 'del_adress'
-             'find', 'hello', 'help', 'show_all',
-             'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
+        # menu_completer = WordCompleter(
+        #     ['add', 'add_birthday', 'add_phone', 'birthday', 'change', 'days_to_birthday',
+        #      'email', 'find', 'hello', 'help', 'show_all',
+        #      'exit', 'close', 'good_bye'], ignore_case=True, WORD=True)  # , match_middle=True)
+
+        menu_completer = NestedCompleter.from_nested_dict({
+            'add': {'name phone': None},
+            'add_phone': {'380'},
+            'add_birthday': {'dd/mm/YYYY'},
+            'birthday': {'num_days': None},
+            'add_adress': {'name adress'}, 
+            'adress': {'name': None},
+            'change': {'name phone new_phone': None},
+            'days_to_birthday': {'name': None},
+            'email': {'name email@': None},
+            'find': {'anything': None},
+            'hello': None,
+            'help': None,
+            'show_all': {'20'},
+            'exit': None,
+            'close': None,
+            'good_buy': None
+        })
 
         user_input = prompt("Enter user name and phone number or 'help' for help: ",
                             completer=menu_completer)
-        print('You said: %s' % user_input)
+        # print('You said: %s' % user_input)
 
-        # user_input = input(">>>")
         func, data = parcer(user_input)
         result = func(*data)
         print(result)
@@ -584,9 +624,9 @@ def addressbook_main():
 
 
 if __name__ == "__main__":
+    # Створення нової адресної книги
+    book = AddressBook()
     addressbook_main()
-    # # Створення нової адресної книги
-    # book = AddressBook()
 
     # # Створення запису для John
     # john_record = Record("John")
