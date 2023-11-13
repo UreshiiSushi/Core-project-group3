@@ -188,8 +188,8 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}".format(
-            self.name, self.birthday, phones
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}".format(
+            self.name, self.birthday, phones, self.email
         )
 
 
@@ -231,6 +231,22 @@ class AddressBook(UserDict):
             else:
                 yield values
                 break
+
+    def save_book(self) -> str:
+        with open(save_file, "wb") as file:
+            pickle.dump(self.data, file)
+        return f"Phonebook saved. Good bye!"
+
+    def load_book(self) -> str:
+        with open(save_file, "rb") as file:
+            data = file.read()
+            self.data = pickle.loads(data)
+        return f"Phonebook loaded"
+        # with open(save_file, "rb") as file:
+        #     loaded_book = pickle.load(file)
+        # for k, v in loaded_book.items():
+        #     self.data[k] = v
+        # return f"Phonebook loaded"
 
 
 def input_error(func):
@@ -359,20 +375,20 @@ def show_all():
         print(p)
 
 
-def save_book() -> str:
-    global phone_book
-    with open(save_file, "wb") as file:
-        pickle.dump(phone_book, file)
-    return f"Phonebook saved"
+# def save_book() -> str:
+#     global phone_book
+#     with open(save_file, "wb") as file:
+#         pickle.dump(phone_book, file)
+#     return f"Phonebook saved"
 
 
-def load_book() -> str:
-    global phone_book
-    with open(save_file, "rb") as file:
-        loaded_book = pickle.load(file)
-    for k, v in loaded_book.items():
-        phone_book.data[k] = v
-    return f"Phonebook loaded"
+# def load_book() -> str:
+#     global phone_book
+#     with open(save_file, "rb") as file:
+#         loaded_book = pickle.load(file)
+#     for k, v in loaded_book.items():
+#         phone_book.data[k] = v
+#     return f"Phonebook loaded"
 
 
 # if all([save_file.exists(), save_file.stat().st_size> 0]):
@@ -448,24 +464,30 @@ def show_all(*args):
 
 
 def save_book() -> str:
-    # global phone_book
-    with open(save_file, "wb") as file:
-        pickle.dump(phone_book, file)
-    return f"Phonebook saved"
+    return phone_book.save_book()
+
+
+#     # global phone_book
+# with open(save_file, "wb") as file:
+#     pickle.dump(phone_book, file)
+# return f"Phonebook saved"
 
 
 def load_book() -> str:
-    # global phone_book
-    with open(save_file, "rb") as file:
-        loaded_book = pickle.load(file)
-    for k, v in loaded_book.items():
-        phone_book.data[k] = v
-    return f"Phonebook loaded"
+    return phone_book.load_book()
 
 
-def stop_command(*args) -> str:
-    return f"{save_book()}. Good bye!"
+#     # global phone_book
+#     with open(save_file, "rb") as file:
+#         loaded_book = pickle.load(file)
+#     for k, v in loaded_book.items():
+#         phone_book.data[k] = v
+#     return f"Phonebook loaded"
 
+
+
+def stop_command(*_):
+    return phone_book.save_book()
 
 def unknown(*args):
     return "Unknown command. Try again."
@@ -489,18 +511,19 @@ COMMANDS = {
 }
 
 
+
 def parcer(text: str):
     for func, kw in COMMANDS.items():
         command = text.rstrip().split()
-        if text.lower().startswith(kw) and kw == command[0].lower():
-            return func, text[len(kw):].strip().split()
+        if text.lower().startswith(kw) or kw == command[0].lower():
+            return func, text[len(kw) :].strip().split()
     return unknown, []
 
 
 def addressbook_main():
     try:
         if all([save_file.exists(), save_file.stat().st_size > 0]):
-            print(load_book())
+            print(phone_book.load_book())
     except:
         ...
     while True:
@@ -529,6 +552,7 @@ def addressbook_main():
         user_input = prompt("Enter user name and phone number or 'help' for help: ",
                             completer=menu_completer)
         # print('You said: %s' % user_input)
+
         func, data = parcer(user_input)
         result = func(*data)
         print(result)
@@ -539,6 +563,7 @@ def addressbook_main():
 if __name__ == "__main__":
     # Створення нової адресної книги
     book = AddressBook()
+    addressbook_main()
 
     # Створення запису для John
     john_record = Record("John")
