@@ -27,9 +27,9 @@ Key features:
 
 ### Main menu
 
-![Screenshot of the main menu](image.png)
+![Screenshot of the main menu](main-menu.png)
 
-To choose the module you need with arrows, then press Tab to choose 'Ok' and Enter/Return. 
+To choose the module you need with arrows and Enter/Return, then press Tab to choose 'Ok' and Enter/Return. 
 To exit from the app press Tab twice to choose 'Cancel', then Enter/Return.
 
 ### Sorting 
