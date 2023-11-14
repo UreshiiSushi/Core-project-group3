@@ -22,6 +22,7 @@ help_message = """Use next commands:
     <birthday> 'num' - return records with birthday date in 'num' days
     <delete> 'name' - delete name and phones from the dictionary
     <find> 'info' - find all records includes 'info' in Name or Phone
+    <search> 'str': min 3 symbols - find all records includes 'str' in Name or Phone or Adress
     <hello> - greeting
     <email> 'name' [email@domain.com] - add OR change email for specified Name
     <phone> 'name' - show phone number for this name
@@ -168,6 +169,12 @@ class Record:
                 result = p
         return result
 
+    def find_adress(self, adress: str):
+        result = None
+        if adress.lower() in str(self.adress):
+            result = self.adress
+        return result
+
     def remove_phone(self, phone: str):
         search = self.find_phone(phone)
         if search in self.phones:
@@ -210,7 +217,7 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress:{}".format(
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress: {}".format(
             self.name, self.birthday, phones, self.email, self.adress
         )
 
@@ -280,9 +287,11 @@ def input_error(func):
         except KeyError:
             return "Unknown name. Try again"
         except ValueError:
-            return "Wrong phone number. Try again"
+            return "Wrong format. Try again"  # Було Wrong phone number.
         except DateError:
             return "Birthday date error or no birthday data"
+        except IndexError:
+            return "Not enough params. Try again"
 
     return inner
 
@@ -307,7 +316,7 @@ def add_birhday(*args):
         rec.add_birthday(birhday.date())
         return f"{args[0].capitalize()}'s birthday added {args[1]}"
     else:
-        raise DateError()
+        raise KeyError()
 
 
 @input_error
@@ -373,21 +382,21 @@ def add_change_email(name: str, email: str = None):
     return f"Contact {name} wasn`t found"
 
 
-@input_error
-def find(search: str) -> str or None:
-    # global phone_book
-    rec = []
-    if search.isdigit():
-        for k, v in phone_book.items():
-            if v.find_phone(search):
-                rec.append(phone_book[k])
-    else:
-        for k, v in phone_book.items():
-            if search in k:
-                rec = phone_book[k]
-    if rec:
-        result = "\n".join(list(map(str, rec)))
-        return f"Finded \n{result}"
+# @input_error
+# def find(search: str) -> str or None:
+#     # global phone_book
+#     rec = []
+#     if search.isdigit():
+#         for k, v in phone_book.items():
+#             if v.find_phone(search):
+#                 rec.append(phone_book[k])
+#     else:
+#         for k, v in phone_book.items():
+#             if search in k:
+#                 rec = phone_book[k]
+#     if rec:
+#         result = "\n".join(list(map(str, rec)))
+#         return f"Finded \n{result}"
 
 
 def show_all():
@@ -460,11 +469,11 @@ def find(search: str) -> str or None:
     rec = []
     if search.isdigit():
         for k, v in phone_book.items():
-            if v.find_phone(search):
+            if v.find_phone(search) or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
     else:
         for k, v in phone_book.items():
-            if search in k:
+            if search.lower() in k.lower() or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
                 # rec = phone_book[k]
     if rec:
@@ -507,13 +516,10 @@ def load_book() -> str:
 #     return f"Phonebook loaded"
 
 
-
-
 @input_error
-def add_adress(*args):
+def add_adress(name, *args):
     # add addresses for an existing user
-    name: str = args[0]
-    adress: str = ' '.join(args).replace(name, '', 1)
+    adress: str = ' '.join(args)
     rec: Record = phone_book.get(name)
     if rec:
         rec.add_adress(adress)
@@ -542,8 +548,10 @@ def remove_adr(*args):
     else:
         raise KeyError()
 
+
 def stop_command(*_):
     return phone_book.save_book()
+
 
 def unknown(*args):
     return "Unknown command. Try again."
@@ -568,8 +576,6 @@ COMMANDS = {
     stop_command: ("good_bye", "close", "exit", "stop"),
     add_change_email: "email",
 }
-
-
 
 
 def parcer(text: str):
@@ -598,7 +604,7 @@ def addressbook_main():
             'add_phone': {'380'},
             'add_birthday': {'dd/mm/YYYY'},
             'birthday': {'num_days': None},
-            'add_adress': {'name adress'}, 
+            'add_adress': {'name adress'},
             'adress': {'name': None},
             'change': {'name phone new_phone': None},
             'days_to_birthday': {'name': None},
