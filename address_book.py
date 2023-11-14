@@ -521,7 +521,7 @@ def addressbook_main():
     while True:
         menu_completer = NestedCompleter.from_nested_dict({
             'add': {'name phone': None},
-            'add_phone': {'380'},
+            'add_phone': {'name phone(10 digits)': None},
             'add_birthday': {'name dd/mm/YYYY'},
             'birthday': {'num_days': None},
             'add_adress': {'name adress'},
