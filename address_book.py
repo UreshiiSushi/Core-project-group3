@@ -169,6 +169,12 @@ class Record:
                 result = p
         return result
 
+    def find_adress(self, adress: str):
+        result = None
+        if adress.lower() in str(self.adress):
+            result = self.adress
+        return result
+
     def remove_phone(self, phone: str):
         search = self.find_phone(phone)
         if search in self.phones:
@@ -233,22 +239,6 @@ class AddressBook(UserDict):
                 return self.data.get(name)
         else:
             return None
-
-    def search(self, search_str: str):
-        keys = []
-        if search_str.isdigit():
-            print('Search Phone and Name and Adress')
-            for key, record in self.items():
-                if str(record.name).find(search_str) >= 0 or record.find_phone(search_str.lower()) != None or str(record.adress).lower().find(search_str.lower()) >= 0:
-                    keys.append(key)
-            return keys
-
-        else:
-            print('Search Name and Adress')
-            for key, record in self.items():
-                if str(record.name).lower().find(search_str.lower()) >= 0 or str(record.adress).lower().find(search_str.lower()) >= 0:
-                    keys.append(key)
-            return keys
 
     def delete(self, name: str):
         if name in self.data.keys():
@@ -392,21 +382,21 @@ def add_change_email(name: str, email: str = None):
     return f"Contact {name} wasn`t found"
 
 
-@input_error
-def find(search: str) -> str or None:
-    # global phone_book
-    rec = []
-    if search.isdigit():
-        for k, v in phone_book.items():
-            if v.find_phone(search):
-                rec.append(phone_book[k])
-    else:
-        for k, v in phone_book.items():
-            if search in k:
-                rec = phone_book[k]
-    if rec:
-        result = "\n".join(list(map(str, rec)))
-        return f"Finded \n{result}"
+# @input_error
+# def find(search: str) -> str or None:
+#     # global phone_book
+#     rec = []
+#     if search.isdigit():
+#         for k, v in phone_book.items():
+#             if v.find_phone(search):
+#                 rec.append(phone_book[k])
+#     else:
+#         for k, v in phone_book.items():
+#             if search in k:
+#                 rec = phone_book[k]
+#     if rec:
+#         result = "\n".join(list(map(str, rec)))
+#         return f"Finded \n{result}"
 
 
 def show_all():
@@ -479,11 +469,11 @@ def find(search: str) -> str or None:
     rec = []
     if search.isdigit():
         for k, v in phone_book.items():
-            if v.find_phone(search):
+            if v.find_phone(search) or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
     else:
         for k, v in phone_book.items():
-            if search in k:
+            if search.lower() in k.lower() or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
                 # rec = phone_book[k]
     if rec:
@@ -559,18 +549,6 @@ def remove_adr(*args):
         raise KeyError()
 
 
-@input_error
-def search(str_search):
-    if len(str_search) < 3:
-        return f'minimum number of characters to search is 3'
-    else:
-        result = ''
-        for key in phone_book.search(str_search):
-            result += f'{str(phone_book[key])}\n'
-        print(result)
-        return f'Search {str_search}'
-
-
 def stop_command(*_):
     return phone_book.save_book()
 
@@ -590,7 +568,6 @@ COMMANDS = {
     change_record: "change",
     days_to_birthday: "days_to_birthday",
     find: "find",
-    search: "search",
     help: "help",
     show_all: "show_all",
     save_book: "save",
@@ -633,7 +610,6 @@ def addressbook_main():
             'days_to_birthday': {'name': None},
             'email': {'name email@': None},
             'find': {'anything': None},
-            'search': {'anything min 3 symbol': None},
             'hello': None,
             'help': None,
             'show_all': {'20'},
