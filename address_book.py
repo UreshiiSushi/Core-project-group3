@@ -13,14 +13,16 @@ from prompt_toolkit import prompt
 save_file = Path("phone_book.bin")
 
 help_message = """Use next commands:
-    <add> 'name' 'phone'  - add name and phone number to the dictionary
+    <add> 'name' 'phone'  - add name and phone number (10 digit) to the dictionary
     <add_birthday> 'name' 'birthday' - add birthday date to the name in dictionary
-    <add_phone> 'name' 'phone'  - add phone number to the name in dictionary
-    <add_adr> 'name' 'adress' - add adress to the name in dictionary
-    <change> 'name' 'phone' 'new_phone' - change phone number for this name
+    <add_phone> 'name' 'phone'  - add phone number (10 digit) to the name in dictionary
+    <add_adress> 'name' 'adress' - add adress to the name in dictionary
+    <change> 'name' 'phone' 'new_phone' - change phone number (10 digit) for this name
     <days_to_birthday> 'name' - return number days to birhday
     <birthday> 'num' - return records with birthday date in 'num' days
-    <delete> 'name' - delete name and phones from the dictionary
+    <delete_record> 'name' - delete record for this name from the dictionary
+    <delete_adr> 'name' - remove adress for this name
+    <delete_phone> 'name' 'phone' - remove phone for this name
     <find> 'info' - find all records includes 'info' in Name or Phone
     <search> 'str': min 3 symbols - find all records includes 'str' in Name or Phone or Adress
     <hello> - greeting
@@ -28,7 +30,6 @@ help_message = """Use next commands:
     <phone> 'name' - show phone number for this name
     <adress> 'name' - show adres for this name
     <remove_phone> 'name' 'phone' - remove phone for this name
-    <remove_adr> 'name' - remove adress for this name 
     <show_all>  -  show all records in the dictionary
     <show_all> 'N' - show records by N records on page
     <exit> or <close> or <good_bye> - exit from module"""
@@ -38,6 +39,10 @@ Type command or 'help' for more information."""
 
 
 class DateError(Exception):
+    ...
+
+
+class PhoneError(Exception):
     ...
 
 
@@ -127,7 +132,7 @@ class Phone(Field):
 
 class Record:
     def __init__(
-        self, name, phone: str = None, birthday_date: str = None, email: str = None, adress: str = None
+        self, name, phone: str = None, birthday_date: Birthday = None, email: str = None, adress: str = None
     ):
         self.name = Name(name)
         self.phones: list(Phone) = []
@@ -137,7 +142,7 @@ class Record:
         if phone:
             self.phones.append(Phone(phone))
         if birthday_date:
-            self.birthday = birthday_date  # Birthday(birthday_date)
+            self.birthday = birthday_date
         if email:
             self.email = Email(email)
 
@@ -181,7 +186,7 @@ class Record:
             self.phones.remove(search)
             return f"Removed phone {phone} from contact {self.name}."
         else:
-            raise ValueError
+            raise PhoneError
 
     def edit_phone(self, phone: str, new_phone: str) -> str:
         edit_check = False
@@ -292,6 +297,8 @@ def input_error(func):
             return "Birthday date error or no birthday data"
         except IndexError:
             return "Not enough params. Try again"
+        except PhoneError:
+            return "This phone number doesn't exist in the dictionary."
 
     return inner
 
@@ -327,7 +334,7 @@ def days_to_birthday(*args):
         days = rec.days_to_birthday()
         return f"{days} days to {name.capitalize()}'s birthday"
     else:
-        raise KeyError()
+        raise DateError()
 
 
 @input_error
@@ -351,7 +358,7 @@ phone_book = AddressBook()
 @input_error
 def add_record(name: str, phone: str):
     global phone_book
-    record = Record(name, phone)
+    record = Record(name.lower(), phone)
     phone_book.add_record(record)
     # if not phone.isdecimal():
     #     raise ValueError
@@ -362,7 +369,7 @@ def add_record(name: str, phone: str):
 @input_error
 def change_record(name: str, phone: str, new_phone: str):
     global phone_book
-    rec: Record = phone_book.find(name)
+    rec: Record = phone_book.find(name.lower())
     if rec:
         return rec.edit_phone(phone, new_phone)
     # if not new_phone.isdecimal():
@@ -374,36 +381,22 @@ def change_record(name: str, phone: str, new_phone: str):
 
 
 @input_error
+def delete_record(*args):
+    name = args[0].lower()
+    if phone_book.get(name):
+        phone_book.delete(name)
+        return f"Record with name {args[0].capitalize()} deleted."
+    else:
+        raise KeyError()
+
+
+@input_error
 def add_change_email(name: str, email: str = None):
     global phone_book
-    rec: Record = phone_book.find(name)
+    rec: Record = phone_book.find(name.lower())
     if rec:
         return rec.add_change_email(email)
     return f"Contact {name} wasn`t found"
-
-
-# @input_error
-# def find(search: str) -> str or None:
-#     # global phone_book
-#     rec = []
-#     if search.isdigit():
-#         for k, v in phone_book.items():
-#             if v.find_phone(search):
-#                 rec.append(phone_book[k])
-#     else:
-#         for k, v in phone_book.items():
-#             if search in k:
-#                 rec = phone_book[k]
-#     if rec:
-#         result = "\n".join(list(map(str, rec)))
-#         return f"Finded \n{result}"
-
-
-def show_all():
-    global phone_book
-    for p in phone_book.iterator():
-        input(">>>Press Enter for next record")
-        print(p)
 
 
 # def save_book() -> str:
@@ -439,28 +432,15 @@ def add_phone(*args):
 
 
 @input_error
-def add_record(name: str, phone: str):
-    # global phone_book
-    record = Record(name, phone)
-    phone_book.add_record(record)
-    # if not phone.isdecimal():
-    #     raise ValueError
-    # phone_book[name] = phone
-    return f"{record}"
-
-
-@input_error
-def change_record(name: str, phone: str, new_phone: str):
-    # global phone_book
-    rec: Record = phone_book.find(name)
+def remove_phone(*args):
+    name = args[0].lower()
+    phone = args[1]
+    rec = phone_book.get(name)
     if rec:
-        return rec.edit_phone(phone, new_phone)
-    # if not new_phone.isdecimal():
-    #     raise ValueError
-    # rec = phone_book[name]
-    # if rec:
-    #     phone_book[name] = new_phone
-    # return f"Changed phone {name=} {new_phone=}"
+        rec.remove_phone(phone)
+        return f'{phone} deleted.'
+    else:
+        raise PhoneError()
 
 
 @input_error
@@ -498,12 +478,6 @@ def save_book() -> str:
     return phone_book.save_book()
 
 
-#     # global phone_book
-# with open(save_file, "wb") as file:
-#     pickle.dump(phone_book, file)
-# return f"Phonebook saved"
-
-
 def load_book() -> str:
     return phone_book.load_book()
 
@@ -519,18 +493,19 @@ def load_book() -> str:
 @input_error
 def add_adress(name, *args):
     # add addresses for an existing user
-    adress: str = ' '.join(args)
+    name: str = args[0].lower()
+    adress: str = ' '.join(args).replace(name, '', 1)
     rec: Record = phone_book.get(name)
     if rec:
         rec.add_adress(adress)
-        return f"{rec.name}'s added adress {adress}"
+        return f"{name.capitalize()}'s added adress {adress}"
     else:
         raise KeyError()
 
 
 def show_adress(*args):
     # show the address for an existing user
-    name = args[0]
+    name = args[0].lower()
     rec: Record = phone_book.get(name)
     if rec:
         return rec.show_adress()
@@ -540,7 +515,7 @@ def show_adress(*args):
 
 def remove_adr(*args):
     # delete the address for the existing user
-    name = args[0]
+    name = args[0].lower()
     rec: Record = phone_book.get(name)
     if rec:
         rec.del_adress()
@@ -549,8 +524,10 @@ def remove_adr(*args):
         raise KeyError()
 
 
+
 def stop_command(*_):
     return phone_book.save_book()
+
 
 
 def unknown(*args):
@@ -566,13 +543,15 @@ COMMANDS = {
     show_adress: "adress",
     birthday_in: "birthday",
     change_record: "change",
+    delete_record: "delete_record",
     days_to_birthday: "days_to_birthday",
     find: "find",
     help: "help",
     show_all: "show_all",
     save_book: "save",
     load_book: "load",
-    remove_adr: "del_adress",
+    remove_phone: "delete_phone",
+    remove_adr: "delete_adr",
     stop_command: ("good_bye", "close", "exit", "stop"),
     add_change_email: "email",
 }
@@ -602,12 +581,15 @@ def addressbook_main():
         menu_completer = NestedCompleter.from_nested_dict({
             'add': {'name phone': None},
             'add_phone': {'380'},
-            'add_birthday': {'dd/mm/YYYY'},
+            'add_birthday': {'name dd/mm/YYYY'},
             'birthday': {'num_days': None},
             'add_adress': {'name adress'},
             'adress': {'name': None},
             'change': {'name phone new_phone': None},
             'days_to_birthday': {'name': None},
+            'delete_adr': {'name': None},
+            'delete_phone': {'name phone'},
+            'delete_record': {'name': None},
             'email': {'name email@': None},
             'find': {'anything': None},
             'hello': None,
