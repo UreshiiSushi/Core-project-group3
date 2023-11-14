@@ -441,7 +441,7 @@ def load_book() -> str:
 @input_error
 def add_adress(name, *args):
     # add addresses for an existing user
-    name: str = args[0].lower()
+    # name: str = args[0].lower()
     adress: str = ' '.join(args).replace(name, '', 1)
     rec: Record = phone_book.get(name)
     if rec:
