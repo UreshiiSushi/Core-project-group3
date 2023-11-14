@@ -9,7 +9,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
+- [Authors](#authors)
 - [License](#license)
 
 ## Features
@@ -49,13 +49,13 @@ In case you have less than 10 digits in your phone number write 0 on start 'till
 
 Help message:
 
-> add (name phone)  - add name and phone number (10 digits) to the dictionary
+> add 'name' 'phone'  - add name and phone number (10 digits) to the dictionary
 
-> add_birthday (name birthday) - add birthday date to the name in the dictionary
+> add_birthday 'name' 'birthday' - add birthday date to the name in the dictionary
 
-> add_phone (name phone)  - add phone number (10 digit) to the name in dictionary
+> add_phone 'name' 'phone' - add phone number (10 digit) to the name in dictionary
 
-> add_adress (name adress) - add address to the name in dictionary
+> add_adress 'name' 'adress' - add address to the name in dictionary
 
 > change 'name' 'phone' 'new_phone' - change phone number (10 digit) for this name
 
@@ -88,6 +88,46 @@ Help message:
 > show_all N - show records by N records on page
 
 > exit or close or good_bye - exit from module
+
+After exiting from the address book, your contacts will be saved to 'phone_book.bin'.
+
+### Notebook
+
+Load from 'notes.bin' if exists, create it if not.
+Automatically parse tags from the text of the note and save them to the tag list.
+
+Help message:
+
+> add 'any string'       - add new record to notebook
+
+> show                   - show all records
+
+> sort                   - sort records by tags
+
+> find 'text'            - find records by part
+
+> change 'number' 'text' - changing a record by its number
+
+> delete 'number'        - removing a record by its number
+
+> help                   - notebook commands list
+
+> exit                   - leave notebook
+
+After exiting from the notebook, it will be saved to 'notes.bin'.
+
+## Authors
+
++ [Mariia Turbanova](https://github.com/UreshiiSushi)
++ [Yurii Protsenko](https://github.com/JurijProcenko)
++ [Oleksandr Pripa](https://github.com/olpripa)
++ [Oles Bychevskyi](https://github.com/olesbychevsky)
++ [Alex Lomakin](https://github.com/lomakina0612)
++ [Oleksandr Kondratiuk](https://github.com/1Oleksandr)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 
 
