@@ -24,6 +24,7 @@ help_message = """Use next commands:
     <delete_adr> 'name' - remove adress for this name
     <delete_phone> 'name' 'phone' - remove phone for this name
     <find> 'info' - find all records includes 'info' in Name or Phone
+    <search> 'str': min 3 symbols - find all records includes 'str' in Name or Phone or Adress
     <hello> - greeting
     <email> 'name' [email@domain.com] - add OR change email for specified Name
     <phone> 'name' - show phone number for this name
@@ -173,6 +174,12 @@ class Record:
                 result = p
         return result
 
+    def find_adress(self, adress: str):
+        result = None
+        if adress.lower() in str(self.adress):
+            result = self.adress
+        return result
+
     def remove_phone(self, phone: str):
         search = self.find_phone(phone)
         if search in self.phones:
@@ -215,7 +222,7 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress:{}".format(
+        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress: {}".format(
             self.name, self.birthday, phones, self.email, self.adress
         )
 
@@ -285,9 +292,11 @@ def input_error(func):
         except KeyError:
             return "Unknown name. Try again"
         except ValueError:
-            return "Wrong phone number. Try again"
+            return "Wrong format. Try again"  # Було Wrong phone number.
         except DateError:
             return "Birthday date error or no birthday data"
+        except IndexError:
+            return "Not enough params. Try again"
         except PhoneError:
             return "This phone number doesn't exist in the dictionary."
 
@@ -314,7 +323,7 @@ def add_birhday(*args):
         rec.add_birthday(birhday.date())
         return f"{args[0].capitalize()}'s birthday added {args[1]}"
     else:
-        raise DateError()
+        raise KeyError()
 
 
 @input_error
@@ -440,11 +449,11 @@ def find(search: str) -> str or None:
     rec = []
     if search.isdigit():
         for k, v in phone_book.items():
-            if v.find_phone(search):
+            if v.find_phone(search) or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
     else:
         for k, v in phone_book.items():
-            if search in k:
+            if search.lower() in k.lower() or search.lower() in str(v.find_adress(search.lower())):
                 rec.append(phone_book[k])
                 # rec = phone_book[k]
     if rec:
@@ -482,7 +491,7 @@ def load_book() -> str:
 
 
 @input_error
-def add_adress(*args):
+def add_adress(name, *args):
     # add addresses for an existing user
     name: str = args[0].lower()
     adress: str = ' '.join(args).replace(name, '', 1)
@@ -515,8 +524,10 @@ def remove_adr(*args):
         raise KeyError()
 
 
+
 def stop_command(*_):
     return phone_book.save_book()
+
 
 
 def unknown(*args):
