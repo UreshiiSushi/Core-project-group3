@@ -12,14 +12,14 @@ def main():
         result = radiolist_dialog(
             title="Welcome to Exponenta app.",
             text='''Here you can:
-        1. sort your folder with random files, 
-        2. make your own address book,
-        3. write some notes
+        1. make your own address book,
+        2. write some notes,
+        3. sort your folder with random files
 What would you like to do ? ''',
             values=[
-                ("sort", "Sort directory"),
                 ("addressbook", "Address book"),
                 ("notebook", "Notebook"),
+                ("sort", "Sort directory"),
             ],
             style=Style.from_dict({
                 'dialog': 'bg:#539ce6',

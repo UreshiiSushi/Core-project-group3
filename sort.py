@@ -101,20 +101,24 @@ def delete_empty_folders(path: Path) -> None:
 
 
 def sort_main() -> str:
-    folder = input("Enter path to folder you want to sort: ")
-    try:
-        path = Path(folder)
-    except IndexError:
-        return "No path entered"
+    while True:
+        folder = input("Enter the full folder path you want to sort or 'exit' to finish: \n>>>")
+        if folder == "exit":
+            return "Good bye"
+        elif folder:
+            path = Path(folder)
+        else:
+            print("No path entered. Try again")
+            continue
 
-    if not path.exists():
-        return "Path does not exists"
+        if not path.exists():
+            return "Path does not exists"
 
-    sort_folder(path)
-    delete_empty_folders(path)
-    write_in_file(file_list, ext_list, path)
+        sort_folder(path)
+        delete_empty_folders(path)
+        write_in_file(file_list, ext_list, path)
 
-    return "Folder sorted"
+        return "Folder sorted"
 
 
 if __name__ == "__main__":

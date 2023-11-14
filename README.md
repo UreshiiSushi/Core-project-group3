@@ -27,9 +27,9 @@ Key features:
 
 ### Main menu
 
-![Screenshot of the main menu](image.png)
+![Screenshot of the main menu](main-menu.png)
 
-To choose the module you need with arrows, then press Tab to choose 'Ok' and Enter/Return. 
+To choose the module you need with arrows and Enter/Return, then press Tab to choose 'Ok' and Enter/Return. 
 To exit from the app press Tab twice to choose 'Cancel', then Enter/Return.
 
 ### Sorting 
@@ -39,11 +39,11 @@ Enter the full folder path you want to sort and press Enter/Return.
 > Example: d:\folder_with_scrap
 
 Wait 'till your folder is sorted. 
-Return to the main menu will be automatically.
+Return to the main menu will be done automatically.
 
 ### Address Book
 
-If you have saved address book in phone_book.bin it will load automatically.
+If you have saved the address book in phone_book.bin it will load automatically.
 Use 'help' command to see all possible commands and input formats.
 In case you have less than 10 digits in your phone number write 0 on start 'till your phone will be 10 digits long.
 
