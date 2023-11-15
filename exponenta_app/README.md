@@ -21,7 +21,16 @@ Key features:
 
 ## Installation
 
-[Explain how users can install and set up your project. Include any dependencies or prerequisites.]
+1. Clone project to your device. 
+2. Open the terminal in folder you downloaded the repo.
+3. Write 
+'''
+pip install -e .
+'''
+4. Wait finishing the installation.
+5. Congratulations! Now you can use the 'exponenta-app' command to run the program from any place on your computer
+
+
 
 ## Usage
 
