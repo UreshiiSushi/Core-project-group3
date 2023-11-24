@@ -1,4 +1,5 @@
 # from _collections_abc import Iterator
+from abc import ABC, abstractmethod
 from collections import UserDict
 from datetime import date, datetime
 from itertools import islice
@@ -36,6 +37,15 @@ help_message = """Use next commands:
 
 greeting_message = """Welcome to Address Book.
 Type command or 'help' for more information."""
+
+class CommonInterface(ABC):
+    @abstractmethod
+    def show_date(self, data: str):
+        pass
+
+class UserInterface:
+    def show_data(self, data):
+        print(data)
 
 
 class DateError(Exception):
@@ -81,7 +91,7 @@ class Email(Field):
         return self.__email
 
     @email.setter
-    def email(self, email):
+    def email(self, email:str):
         if re.match(r"[A-z.]+\w+@[A-z]+\.[A-Za-z]{2,}", email):
             self.__email = email
         else:
@@ -574,10 +584,11 @@ def addressbook_main():
         user_input = prompt(
             "Enter command or 'help' for help: ", completer=menu_completer
         )
-
+        cli = UserInterface()
         func, data = parcer(user_input)
         result = func(*data)
-        print(result)
+        cli.show_data(result)
+        # print(result)
         if result == "Phonebook saved. Good bye!":
             break
 
