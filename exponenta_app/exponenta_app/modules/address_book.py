@@ -1,4 +1,5 @@
 # from _collections_abc import Iterator
+from abc import ABC, abstractmethod
 from collections import UserDict
 from datetime import date, datetime
 from itertools import islice
@@ -13,29 +14,38 @@ from prompt_toolkit import prompt
 save_file = Path("phone_book.bin")
 
 help_message = """Use next commands:
-    <add> 'name' 'phone'  - add name and phone number (10 digits) to the dictionary
-    <add_birthday> 'name' 'birthday' - add birthday date to the name in the dictionary
-    <add_phone> 'name' 'phone'  - add phone number (10 digits) to the name in the dictionary
-    <add_adress> 'name' 'adress' - add adress to the name in dictionary
+    <add> 'name' 'phone'                - add name and phone number (10 digits) to the dictionary
+    <add_birthday> 'name' 'birthday'    - add birthday date to the name in the dictionary
+    <add_phone> 'name' 'phone'          - add phone number (10 digits) to the name in the dictionary
+    <add_adress> 'name' 'adress'        - add adress to the name in dictionary
     <change> 'name' 'phone' 'new_phone' - change phone number (10 digits) for this name
-    <days_to_birthday> 'name' - return number days to birhday
-    <birthday> 'num' - return records with birthday date in 'num' days
-    <delete_record> 'name' - delete record for this name from the dictionary
-    <delete_adr> 'name' - remove adress for this name
-    <delete_phone> 'name' 'phone' - remove phone for this name
-    <find> 'info' - find all records including 'info' in Name or Phone
-    <search> 'str': min 3 symbols - find all records including 'str' in Name or Phone or Adress
-    <hello> - greeting
-    <email> 'name' [email@domain.com] - add OR change email for specified Name
-    <phone> 'name' - show phone number for this name
-    <adress> 'name' - show address for this name
-    <remove_phone> 'name' 'phone' - remove phone for this name
-    <show_all>  -  show all records in the dictionary
-    <show_all> 'N' - show records by N records on page
-    <exit> or <close> or <good_bye> - exit from module"""
+    <days_to_birthday> 'name'           - return number days to birhday
+    <birthday> 'num'                    - return records with birthday date in 'num' days
+    <delete_record> 'name'              - delete record for this name from the dictionary
+    <delete_adr> 'name'                 - remove adress for this name
+    <delete_phone> 'name' 'phone'       - remove phone for this name
+    <find> 'info'                       - find all records including 'info' in Name or Phone
+    <search> 'str': min 3 symbols       - find all records including 'str' in Name or Phone or Adress
+    <hello>                             - greeting
+    <email> 'name' [email@domain.com]   - add OR change email for specified Name
+    <phone> 'name'                      - show phone number for this name
+    <adress> 'name'                     - show address for this name
+    <remove_phone> 'name' 'phone'       - remove phone for this name
+    <show_all>                          -  show all records in the dictionary
+    <show_all> 'N'                      - show records by N records on page
+    <exit> or <close> or <good_bye>     - exit from module"""
 
 greeting_message = """Welcome to Address Book.
 Type command or 'help' for more information."""
+
+class CommonInterface(ABC):
+    @abstractmethod
+    def show_date(self, data: str):
+        pass
+
+class UserInterface:
+    def show_data(self, data):
+        print(data)
 
 
 class DateError(Exception):
@@ -81,7 +91,7 @@ class Email(Field):
         return self.__email
 
     @email.setter
-    def email(self, email):
+    def email(self, email:str):
         if re.match(r"[A-z.]+\w+@[A-z]+\.[A-Za-z]{2,}", email):
             self.__email = email
         else:
@@ -132,7 +142,12 @@ class Phone(Field):
 
 class Record:
     def __init__(
-        self, name, phone: str = None, birthday_date: Birthday = None, email: str = None, adress: str = None
+        self,
+        name,
+        phone: str = None,
+        birthday_date: Birthday = None,
+        email: str = None,
+        adress: str = None,
     ):
         self.name = Name(name)
         self.phones: list(Phone) = []
@@ -162,6 +177,7 @@ class Record:
 
     def del_adress(self) -> None:
         self.adress = None
+
     # End adress block
 
     def add_birthday(self, bd_date) -> None:
@@ -222,8 +238,10 @@ class Record:
 
     def __str__(self):
         phones = "; ".join(p.phone for p in self.phones)
-        return "Contact name: {}, birthday: {}, phones: {}, email: {}, adress: {}".format(
-            self.name, self.birthday, phones, self.email, self.adress
+        return (
+            "Contact name: {}, birthday: {}, phones: {}, email: {}, adress: {}".format(
+                self.name, self.birthday, phones, self.email, self.adress
+            )
         )
 
 
@@ -254,7 +272,7 @@ class AddressBook(UserDict):
         values = list(map(str, islice(self.data.values(), None)))
         while self.counter < len(values):
             if quantity:
-                yield values[self.counter: self.counter + quantity]
+                yield values[self.counter : self.counter + quantity]
                 self.counter += quantity
             else:
                 yield values
@@ -288,6 +306,7 @@ def input_error(func):
             return "Not enough params. Try again"
         except PhoneError:
             return "This phone number doesn't exist in the dictionary."
+
     return inner
 
 
@@ -301,7 +320,7 @@ def help():
 
 @input_error
 def add_birhday(*args) -> str:
-    name = args[0].lower()
+    name = args[0]
     try:
         birhday = datetime.strptime(args[1], "%d/%m/%Y")
     except:
@@ -316,7 +335,7 @@ def add_birhday(*args) -> str:
 
 @input_error
 def days_to_birthday(*args) -> str:
-    name = args[0].lower()
+    name = args[0]
     rec = phone_book.get(name)
     if rec:
         days = rec.days_to_birthday()
@@ -342,10 +361,25 @@ def birthday_in(*args) -> str:
 phone_book = AddressBook()
 
 
+def find_name(args: str) -> str:
+    name = ""
+    idx = 0
+    for item in args:
+        if item.isalpha() or item == " ":
+            name += f"{item}"
+            idx += 1
+        else:
+            name = name.strip()
+            break
+    return name, args[idx:]
+
+
 @input_error
-def add_record(name: str, phone: str) -> str:
+def add_record(name: str, *phone: list) -> str:
+    x = name + " " + " ".join(phone)
+    name, phone = find_name(x)
     global phone_book
-    record = Record(name.lower(), phone)
+    record = Record(name, phone.strip())
     phone_book.add_record(record)
     return f"{record}"
 
@@ -353,17 +387,17 @@ def add_record(name: str, phone: str) -> str:
 @input_error
 def change_record(name: str, phone: str, new_phone: str) -> str:
     global phone_book
-    rec: Record = phone_book.find(name.lower())
+    rec: Record = phone_book.find(name)
     if rec:
         return rec.edit_phone(phone, new_phone)
 
 
 @input_error
 def delete_record(*args):
-    name = args[0].lower()
+    name, _ = find_name(' '.join(args))
     if phone_book.get(name):
         phone_book.delete(name)
-        return f"Record with name {args[0].capitalize()} deleted."
+        return f"Record with name {name} deleted."
     else:
         raise KeyError()
 
@@ -371,7 +405,7 @@ def delete_record(*args):
 @input_error
 def add_change_email(name: str, email: str = None):
     global phone_book
-    rec: Record = phone_book.find(name.lower())
+    rec: Record = phone_book.find(name)
     if rec:
         return rec.add_change_email(email)
     return f"Contact {name} wasn`t found"
@@ -379,7 +413,7 @@ def add_change_email(name: str, email: str = None):
 
 @input_error
 def add_phone(*args):
-    name = args[0].lower()
+    name = args[0]
     new_phone = args[1]
     rec = phone_book.get(name)
     if rec:
@@ -391,12 +425,12 @@ def add_phone(*args):
 
 @input_error
 def remove_phone(*args):
-    name = args[0].lower()
+    name = args[0]
     phone = args[1]
     rec = phone_book.get(name)
     if rec:
         rec.remove_phone(phone)
-        return f'{phone} deleted.'
+        return f"{phone} deleted."
     else:
         raise PhoneError()
 
@@ -406,11 +440,15 @@ def find(search: str) -> str:
     rec = []
     if search.isdigit():
         for k, v in phone_book.items():
-            if v.find_phone(search) or search.lower() in str(v.find_adress(search.lower())):
+            if v.find_phone(search) or search.lower() in str(
+                v.find_adress(search.lower())
+            ):
                 rec.append(phone_book[k])
     else:
         for k, v in phone_book.items():
-            if search.lower() in k.lower() or search.lower() in str(v.find_adress(search.lower())):
+            if search.lower() in k.lower() or search.lower() in str(
+                v.find_adress(search.lower())
+            ):
                 rec.append(phone_book[k])
     if rec:
         result = "\n".join(list(map(str, rec)))
@@ -442,7 +480,7 @@ def load_book() -> str:
 def add_adress(name, *args):
     # add addresses for an existing user
     # name: str = args[0].lower()
-    adress: str = ' '.join(args).replace(name, '', 1)
+    adress: str = " ".join(args).replace(name, "", 1)
     rec: Record = phone_book.get(name)
     if rec:
         rec.add_adress(adress)
@@ -453,7 +491,7 @@ def add_adress(name, *args):
 
 def show_adress(*args):
     # show the address for an existing user
-    name = args[0].lower()
+    name = args[0]
     rec: Record = phone_book.get(name)
     if rec:
         return rec.show_adress()
@@ -463,7 +501,7 @@ def show_adress(*args):
 
 def remove_adr(*args):
     # delete the address for the existing user
-    name = args[0].lower()
+    name = args[0]
     rec: Record = phone_book.get(name)
     if rec:
         rec.del_adress()
@@ -507,7 +545,7 @@ def parcer(text: str):
     for func, kw in COMMANDS.items():
         command = text.rstrip().split()
         if text.lower().startswith(kw) and command[0].lower() in kw:
-            return func, text[len(kw):].strip().split()
+            return func, text[len(kw) :].strip().split()
     return unknown, []
 
 
@@ -519,34 +557,38 @@ def addressbook_main():
         ...
     greeting()
     while True:
-        menu_completer = NestedCompleter.from_nested_dict({
-            'add': {'name phone': None},
-            'add_phone': {'name phone(10 digits)': None},
-            'add_birthday': {'name dd/mm/YYYY'},
-            'birthday': {'num_days': None},
-            'add_adress': {'name adress'},
-            'adress': {'name': None},
-            'change': {'name phone new_phone': None},
-            'days_to_birthday': {'name': None},
-            'delete_adr': {'name': None},
-            'delete_phone': {'name phone'},
-            'delete_record': {'name': None},
-            'email': {'name email@': None},
-            'find': {'anything': None},
-            'hello': None,
-            'help': None,
-            'show_all': {'20'},
-            'exit': None,
-            'close': None,
-            'good_buy': None
-        })
+        menu_completer = NestedCompleter.from_nested_dict(
+            {
+                "add": {"name phone": None},
+                "add_phone": {"name phone(10 digits)": None},
+                "add_birthday": {"name dd/mm/YYYY"},
+                "birthday": {"num_days": None},
+                "add_adress": {"name adress"},
+                "adress": {"name": None},
+                "change": {"name phone new_phone": None},
+                "days_to_birthday": {"name": None},
+                "delete_adr": {"name": None},
+                "delete_phone": {"name phone"},
+                "delete_record": {"name": None},
+                "email": {"name email@": None},
+                "find": {"anything": None},
+                "hello": None,
+                "help": None,
+                "show_all": {"20"},
+                "exit": None,
+                "close": None,
+                "good_buy": None,
+            }
+        )
 
-        user_input = prompt("Enter command or 'help' for help: ",
-                            completer=menu_completer)
-
+        user_input = prompt(
+            "Enter command or 'help' for help: ", completer=menu_completer
+        )
+        cli = UserInterface()
         func, data = parcer(user_input)
         result = func(*data)
-        print(result)
+        cli.show_data(result)
+        # print(result)
         if result == "Phonebook saved. Good bye!":
             break
 

@@ -46,7 +46,7 @@ class NoteBook(UserList):
             print(f"Note: {index}, Text: {note['text']}, Tags: {note['tags']}")
         print("==============================\n")
 
-    def extract_tags(self, text: str):
+    def extract_tags(self, text: str) -> list:
         tags = [word[1:] for word in text.split() if word.startswith("#")]
         return tags
 
@@ -66,7 +66,7 @@ class NoteBook(UserList):
     def sort_notes_by_tags(self):
         self.data.sort(key=lambda note: len(note["tags"]))
 
-    def change_note(self, note_index, new_text):
+    def change_note(self, note_index: int, new_text: str):
         if 0 <= note_index < len(self.data):
             tags = self.extract_tags(new_text)
             self.data[note_index] = {"text": new_text, "tags": tags}
@@ -74,7 +74,7 @@ class NoteBook(UserList):
         else:
             print("The specified entry index does not exist")
 
-    def delete_note(self, note_index):
+    def delete_note(self, note_index: int):
         if 0 <= note_index < len(self.data):
             del self.data[note_index]
             print(f"Record with index {note_index} deleted in notenook")
